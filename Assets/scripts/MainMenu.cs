@@ -12,7 +12,7 @@ public class MainMenu : MonoBehaviour {
 
     void Awake()
     {
-        foreach (GameObject g in menuElements) { g.SetActive(false); }
+        this.ClickOpenClose(null);
     }
 
     void FixedUpdate()
@@ -39,6 +39,6 @@ public class MainMenu : MonoBehaviour {
 
     public void ShowGameImage(GameObject curentButton)
     {
-        gameImage.AddComponent<ImageEffectOpaque>
+        //show image
     }
 }
