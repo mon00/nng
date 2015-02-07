@@ -11,9 +11,17 @@ public class DebugManager : MonoBehaviour {
     public GameObject debugWindow;
 
     [Header("Поля ввода")]
+    
+    [SerializeField]
     public GameObject oKey;
+    
+    [SerializeField]
     public GameObject oValue;
+    
+    [SerializeField]
+    public string fileToSave = "DebugSave";
 
+    
     private Dictionary<string,string> d; 
     private bool debugOnLast;
 
@@ -21,6 +29,7 @@ public class DebugManager : MonoBehaviour {
     {
         debugOnLast = debugOn;
         debugWindow.SetActive(debugOn);
+        d = new Dictionary<string, string>();
     }
     void FixedUpdate()
     {
@@ -33,7 +42,41 @@ public class DebugManager : MonoBehaviour {
 
     public void Add()
     {
-        string key = oKey.guiText.ToString();
-        Debug.Log(key);
+        Text key = oKey.GetComponent<Text>();
+        Text value = oValue.GetComponent<Text>();
+        if (key.text!="" && value.text!="")
+        {
+            this.d.Add(key.text, value.text);
+        }
+    }
+    public void print()
+    {
+        if (d.Count != 0)
+        {
+            Debug.Log("Key - Value в словаре d");
+            foreach (KeyValuePair<string, string> kvs in d)
+            {
+                Debug.Log(kvs.Key + " - " + kvs.Value);
+            }
+            Debug.Log("Конец перечисления");
+        }
+        else Debug.Log("Словарь пуст!");
+    }
+    public void Save()
+    {
+        if (d.Count != 0)
+        {
+            SaveLoadManager.Save(d, fileToSave);
+        }
+        else Debug.Log("Словарь пуст");
+    }
+    public void Load()
+    {
+        d.Clear();
+        d = SaveLoadManager.Load(fileToSave);
+    }
+    public void Clear()
+    {
+        d.Clear();
     }
 }

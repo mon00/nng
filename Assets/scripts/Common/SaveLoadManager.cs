@@ -7,9 +7,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 public class SaveLoadManager : MonoBehaviour {
     [SerializeField]
-    private static string savesPath = "Data/Save";
+    private static string savesPath = "Data/Save/";
 
-    static public void SaveManger(Dictionary<string, string> dic, string fileName)
+    static public void Save(Dictionary<string, string> dic, string fileName)
     {
         FileStream fs = new FileStream(savesPath + fileName, FileMode.Create);
         BinaryFormatter formatter = new BinaryFormatter();
@@ -30,15 +30,22 @@ public class SaveLoadManager : MonoBehaviour {
 
     static public Dictionary<string,string> Load(string fileName)
     {
-        if(File.Exists(savesPath+fileName)) return null;
-
+        if(!File.Exists(savesPath+fileName)) return null;
         FileStream fs = new FileStream(savesPath+fileName, FileMode.Open);
         Dictionary<string,string> dic = null;
         try
         {
-                BinaryFormatter formatter = new BinaryFormatter();
+            BinaryFormatter formatter = new BinaryFormatter();
 
-                dic = (Dictionary<string,string>)formatter.Deserialize(fs);
+            dic = (Dictionary<string,string>)formatter.Deserialize(fs);
+
+            Debug.Log("From SaveLoadManager");
+            foreach(KeyValuePair<string,string> kvp in dic)
+            {
+                Debug.Log(kvp.Key + " - " + kvp.Value);
+            }
+            Debug.Log("End of SaveLoadManager");
+
         }
         catch (SerializationException e)
         {
