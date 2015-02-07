@@ -36,15 +36,7 @@ public class SaveLoadManager : MonoBehaviour {
         try
         {
             BinaryFormatter formatter = new BinaryFormatter();
-
             dic = (Dictionary<string,string>)formatter.Deserialize(fs);
-
-            Debug.Log("From SaveLoadManager");
-            foreach(KeyValuePair<string,string> kvp in dic)
-            {
-                Debug.Log(kvp.Key + " - " + kvp.Value);
-            }
-            Debug.Log("End of SaveLoadManager");
 
         }
         catch (SerializationException e)
