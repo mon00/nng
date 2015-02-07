@@ -8,6 +8,6 @@ public class StandartConfig : MonoBehaviour {
     {
         {"Game_1", "Start new game"},
         {"Game_2", "Start new game"},
-        {"Game_1", "Start new game"}
+        {"Game_3", "Start new game"}
     };
 }

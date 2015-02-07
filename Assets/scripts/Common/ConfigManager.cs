@@ -1,14 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 
-public class GameManager : MonoBehaviour {
+public class ConfigManager : MonoBehaviour {
 
     private string pathToConfig = "Data/Config.gnn";
-    private Dictionary<string, string> config;
+    
+    public static Dictionary<string, string> config;
 
     void Awake()
     {
@@ -21,5 +19,11 @@ public class GameManager : MonoBehaviour {
                 SaveLoadManager.Save(config, "config");
             }
         }
+    }
+
+    public static string GetFromConfig(string key)
+    {
+        if (!config.ContainsKey(key)) return null;
+        return config[key];
     }
 }

@@ -79,4 +79,5 @@ public class DebugManager : MonoBehaviour {
     {
         d.Clear();
     }
+    
 }
