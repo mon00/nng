@@ -5,10 +5,12 @@ using UnityEngine.EventSystems;
 
 public class StartGame : MonoBehaviour {
 
+    private string name;
+
     void Start()
     {
         GameObject go = this.gameObject;
-        string name = ConfigManager.GetFromConfig(go.name);
+        name = ConfigManager.GetFromConfig(go.name);
         go.transform.FindChild("Text").GetComponent<Text>().text = name;
 
         go.GetComponent<Button>().onClick.AddListener(() => { OnPointerDown(); });
@@ -16,6 +18,13 @@ public class StartGame : MonoBehaviour {
 
     public void OnPointerDown()
     {
-        print("123");
+        if (SaveLoadManager.Check("save", name))
+        {
+            SaveLoadManager.Load("save", name);
+        }
+        else
+        {
+            //start new;
+        }
     }
 }
