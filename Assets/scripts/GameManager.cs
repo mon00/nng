@@ -3,15 +3,15 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-    private bool isConfig;
+    [SerializeField]
+    public bool checkBeforeStart;
 
-    void Awake()
+    void Start()
     {
-        if(!isConfig) CheckConfig();
+        if (checkBeforeStart)
+        {
+            Debug.Log("Start check...");
+        }
     }
 
-    void CheckConfig()
-    {
-
-    }
 }
