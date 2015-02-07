@@ -33,7 +33,7 @@ public class DebugManager : MonoBehaviour {
 
     public void Add()
     {
-        Text key = oKey.GetComponent<Text>();
+        string key = oKey.guiText.ToString();
         Debug.Log(key);
     }
 }
