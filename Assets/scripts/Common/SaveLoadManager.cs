@@ -6,12 +6,17 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
 public class SaveLoadManager : MonoBehaviour {
-    [SerializeField]
-    private static string savesPath = "Data/Save/";
+    
+    private const string savesPath = "Data/Save/";
+    private const string add = ".nng";
+    private const string pathToConfig = "Data/Config.gnn";
 
-    static public void Save(Dictionary<string, string> dic, string fileName)
+    static public void Save(Dictionary<string, string> dic, string type, string fileName = null)
     {
-        FileStream fs = new FileStream(savesPath + fileName, FileMode.Create);
+        string path = getPath(type, fileName);
+        if (path == null) return;
+
+        FileStream fs = new FileStream(path, FileMode.Create);
         BinaryFormatter formatter = new BinaryFormatter();
         try
         {
@@ -28,10 +33,12 @@ public class SaveLoadManager : MonoBehaviour {
         }
     }
 
-    static public Dictionary<string,string> Load(string fileName)
+    static public Dictionary<string,string> Load(string type, string fileName=null)
     {
-        if(!File.Exists(savesPath+fileName)) return null;
-        FileStream fs = new FileStream(savesPath+fileName, FileMode.Open);
+        string path = getPath(type, fileName);
+        if(!File.Exists(path)) return null;
+
+        FileStream fs = new FileStream(path, FileMode.Open);
         Dictionary<string,string> dic = null;
         try
         {
@@ -50,5 +57,22 @@ public class SaveLoadManager : MonoBehaviour {
         }
         return dic;
     }
-    
+
+
+    static public bool Check(string type, string fileName = null)
+    {
+
+        if(File.Exists(getPath(type, fileName))) return true;
+        return false;
+    }
+
+   static private string getPath(string type, string fileName)
+    {
+        string path = null;
+
+        if (type == "save") path = savesPath + fileName + add;
+        else if (type == "config") path = pathToConfig;
+
+        return path;
+    }
 }

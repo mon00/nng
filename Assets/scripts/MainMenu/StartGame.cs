@@ -1,15 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class StartGame : MonoBehaviour {
+    public GameObject[] startButtons;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    void Awake()
+    {
+        foreach (GameObject go in startButtons)
+        {
+            string name = go.name;
+
+        }
+    }
+
 }
