@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour {
 
     public const string startGameButtonString = "SGB_";
 
+    private string gamePlace;
+    private string gameName;
+
     private Dictionary<string, string> config = new Dictionary<string,string>();
     private SaveLoadManager SLM = new SaveLoadManager();
 
@@ -49,5 +52,31 @@ public class GameManager : MonoBehaviour {
         if (!config.ContainsKey(key)) return false;
         config[key] = value;
         return true;
+    }
+
+    public string ReadConfig(string key)
+    {
+        if (!config.ContainsKey(key)) return null;
+        return config[key];
+    }
+
+    public void StartNewGame()
+    {
+
+    }
+
+    public void LoadGame(string name)
+    {
+
+    }
+
+    public void SetGamePlace(string value)
+    {
+        gamePlace = value;
+    }
+
+    public void SetGameName(string value)
+    {
+        gameName = value;
     }
 }
