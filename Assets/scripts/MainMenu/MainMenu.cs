@@ -2,7 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MainMenu : MonoBehaviour {
+public class MainMenu : GameManager {
+    
     [SerializeField]
     public GameObject[] menuElements;
 

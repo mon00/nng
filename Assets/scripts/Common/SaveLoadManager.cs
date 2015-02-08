@@ -6,25 +6,22 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
 public class SaveLoadManager : MonoBehaviour {
-    
-    private const string savesPath = "Data/Save/";
-    private const string add = ".nng";
-    private const string pathToConfig = "Data/Config.gnn";
+   
+    private const string generalPath = "Data/";
 
-    static public void Save(Dictionary<string, string> dic, string type, string fileName = null)
+    public void SaveFile(Dictionary<string, string> dic, string path, string fileName, string add)
     {
-        string path = getPath(type, fileName);
-        if (path == null) return;
+        string file = path + fileName + add;
 
-        FileStream fs = new FileStream(path, FileMode.Create);
-        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream fs = new FileStream(file, FileMode.Create);
+        BinaryFormatter bf = new BinaryFormatter();
         try
         {
-            formatter.Serialize(fs, dic);
+            bf.Serialize(fs, dic);
         }
         catch (SerializationException e)
         {
-            Debug.Log("Failed to serialize. Reason: " + e.Message);
+            Debug.Log("Невозможно сохранить файл: " + file + e.Message);
             throw;
         }
         finally
@@ -33,22 +30,21 @@ public class SaveLoadManager : MonoBehaviour {
         }
     }
 
-    static public Dictionary<string,string> Load(string type, string fileName=null)
+    public Dictionary<string, string> LoadFile(string name, string path, string add)
     {
-        string path = getPath(type, fileName);
-        if(!File.Exists(path)) return null;
-
-        FileStream fs = new FileStream(path, FileMode.Open);
-        Dictionary<string,string> dic = null;
+        string file = path + name + add;
+        Dictionary<string, string> dic = null;
+        if (File.Exists(file)) return dic;
+ 
+        FileStream fs = new FileStream(file, FileMode.Open);
         try
         {
-            BinaryFormatter formatter = new BinaryFormatter();
-            dic = (Dictionary<string,string>)formatter.Deserialize(fs);
-
+            BinaryFormatter bf = new BinaryFormatter();
+            dic = (Dictionary<string, string>)bf.Deserialize(fs);
         }
-        catch (SerializationException e)
+        catch
         {
-            Debug.Log("Failed to deserialize. Reason: " + e.Message);
+            Debug.Log("Can`t load file: " + file);
             throw;
         }
         finally
@@ -56,23 +52,5 @@ public class SaveLoadManager : MonoBehaviour {
             fs.Close();
         }
         return dic;
-    }
-
-
-    static public bool Check(string type, string fileName = null)
-    {
-
-        if(File.Exists(getPath(type, fileName))) return true;
-        return false;
-    }
-
-   static private string getPath(string type, string fileName)
-    {
-        string path = null;
-
-        if (type == "save") path = savesPath + fileName + add;
-        else if (type == "config") path = pathToConfig;
-
-        return path;
     }
 }
