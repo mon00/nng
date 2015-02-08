@@ -34,7 +34,7 @@ public class SaveLoadManager : MonoBehaviour {
     {
         string file = path + name + add;
         Dictionary<string, string> dic = null;
-        if (File.Exists(file)) return dic;
+        if (!File.Exists(file)) return dic;
  
         FileStream fs = new FileStream(file, FileMode.Open);
         try

@@ -57,6 +57,7 @@ public class GameManager : MonoBehaviour {
     public string ReadConfig(string key)
     {
         if (!config.ContainsKey(key)) return null;
+        print("Ok!");
         return config[key];
     }
 
