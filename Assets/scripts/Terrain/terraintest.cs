@@ -2,19 +2,15 @@
 using System.Collections;
 
 public class terraintest : MonoBehaviour {
-
-	public TerrainData _terraindata;
-	// Use this for initialization
+	public TerrainData[] terraindata;
+	public int i;
 	void Start () {
-		 
-		GameObject terrain = new GameObject();
-		terrain = Terrain.CreateTerrainGameObject(_terraindata);
+		for (int a = 1; a <= i; a++)
+		{
 		
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-} 
+		GameObject terrain = Terrain.CreateTerrainGameObject(terraindata[Random.Range(1, terraindata.Length)]);
+
+		}
+
+	} 
+}
