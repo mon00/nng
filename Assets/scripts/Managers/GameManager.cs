@@ -108,6 +108,11 @@ public class GameManager : MonoBehaviour
     public Dictionary<string, string> Load(string name = "")
     {
         Dictionary<string, string> SavesData = new Dictionary<string,string>();
+        if (!Directory.Exists(SavesPath))
+        {
+            Directory.CreateDirectory(SavesPath);
+            return SavesData;
+        }
         if (name == "")
         {
             string[] SavesNames = Directory.GetFiles(@SavesPath, SavesInfoAdd);
