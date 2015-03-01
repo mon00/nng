@@ -19,12 +19,12 @@ public class GameManager : MonoBehaviour
     public delegate void GMVoidScriptHolder();
     public event GMVoidScriptHolder OnChengeScene;
     public event GMVoidScriptHolder OnQuitApp;
-    public event GMVoidScriptHolder OnChangeConfig;
+    public event GMVoidScriptHolder OnChengeConfig;
 
     //------------------- Visible variables -------------//
     
     [Header("Variables")]
-    public bool UseDebug = true;
+    //public bool UseDebug = true;
     public bool UseNewConfig = false;
     public bool UseLocalization = false;
 
@@ -39,19 +39,18 @@ public class GameManager : MonoBehaviour
 
     //----------------- Hidden variables --------------//
 
-    public Dictionary<string, string> Config { get; private set; }
     private string ConfigPlace = "Data/config";
-
-    private bool DebugShow= false;
-    public List<string> DebugList { get; private set; }
 
     private string SavesPath = "Data/Save/";
     private string SavesAdd = ".nng";
     private string SavesInfoAdd = ".info";
 
+    public Dictionary<string, string> Config { get; private set; }
     public Dictionary<string, string> GameInfo { get; private set; }
     public Dictionary<string, string> GameData { get; private set; }
     public string GameName { get; private set; }
+
+    //public List<string> DebugList { get; private set; }
 
     //----------------- Functions block ---------------//
 
@@ -72,7 +71,6 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(this.gameObject);
 
         Config = new Dictionary<string,string>();
-        DebugList = new List<string>();
 
         if (DebugOutCodeMin > DebugOutCodeMax)
         {
@@ -80,43 +78,38 @@ public class GameManager : MonoBehaviour
             DebugOutCodeMax = DebugOutCodeMin;
             DebugOutCodeMin = tmp;
         }
-        DebugArea.gameObject.SetActive(DebugShow);
+
         if (UseNewConfig) ResetConfig();
         else LoadConfig();
     }
 
-    private void Update()
-    {
-        if (UseDebug)
-        {
-            if (Input.GetKeyDown("`")) EnableDebug();
-        }
-    }
-
     //------------- Event functions --------------//
 
-    public void ChengeScene(string _scene)
+    public void ChengeScene(string scene)
     {
-        OnChengeScene();
-        Application.LoadLevel(_scene);
+        Debug.Log("Chenge scene");
+        if (OnChengeScene != null) OnChengeScene();
+        Application.LoadLevel(scene);
     }
     public void ChengeScene(int scene)
     {
+        Debug.Log("Chenge scene");
         if (OnChengeScene != null) OnChengeScene();
         Application.LoadLevel(scene);
     }
 
     public void QuitApp()
     {
-        OnQuitApp();
-       // GameManager.instance = null;
+        Debug.Log("Quit App");
+        if (OnQuitApp != null) OnQuitApp();
         Application.Quit();
     }
 
-    public void ChangeConfig()
+    public void ChengeConfig()
     {
-        if (OnChangeConfig == null) return;
-        OnChangeConfig();
+        Debug.Log("Change Config");
+        if (OnChengeConfig != null) return;
+        OnChengeConfig();
     }
 
     //--------- End of Event functions -----------//
@@ -133,11 +126,11 @@ public class GameManager : MonoBehaviour
             return SavesData;
         }
 
-        string[] FileNames = Directory.GetFiles(@SavesPath, SavesInfoAdd);
+        string[] FileNames = Directory.GetFiles(@SavesPath, "*" + SavesInfoAdd, SearchOption.TopDirectoryOnly);
         foreach(string file in FileNames)
         {
-            string SaveName = file;
-            print("Load File = " + file);
+            string SaveName = Path.GetFileNameWithoutExtension(SavesPath + file);
+            print("Load File Info = " + SaveName);
 
             Dictionary<string, string> SaveInfo = new Dictionary<string,string>();
             FileStream fs = new FileStream(SavesPath + SaveName + SavesInfoAdd, FileMode.Open);
@@ -147,9 +140,9 @@ public class GameManager : MonoBehaviour
                 SaveInfo = (Dictionary<string, string>)bf.Deserialize(fs);
                 SavesData.Add(SaveName, SaveInfo);
             }
-            catch
+            catch (SerializationException e)
             {
-                AddDubugMessage("SaveLoadSystem", "Can`t load info of save file: " + file, 3);
+                Debug.Log("Cant load file Info " + name + ". Error: " + e.Message);
                 throw;
             }
             finally
@@ -190,7 +183,7 @@ public class GameManager : MonoBehaviour
         }
         catch (SerializationException e)
         {
-            AddDubugMessage("SaveLoadSystem", "Can`t load file " + name + " - " + e.Message, 4);
+            Debug.Log("Cant load file " + name + ". Error: " + e.Message); ;
 
             GameData = new Dictionary<string, string>();
             GameInfo = new Dictionary<string, string>();
@@ -209,8 +202,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void Save(string name, Dictionary<string, string> Info, Dictionary<string, string> Data)
+    public void Save(string name, Dictionary<string, string> Info, Dictionary<string, string> Data = null)
     {
+        if (Data == null) Data = new Dictionary<string, string>();
+
         GameName = name;
         GameInfo = Info;
         GameData = Data;
@@ -229,7 +224,7 @@ public class GameManager : MonoBehaviour
         }
         catch (SerializationException e)
         {
-            AddDubugMessage("SaveLoadSystem", "Can`t save file: " + GameName + " - " + e.Message, 5);
+            Debug.Log("Cant save file " + name + ". Error: " + e.Message);
             throw;
         }
         finally
@@ -245,7 +240,7 @@ public class GameManager : MonoBehaviour
 
     private void LoadConfig()
     {
-        AddDubugMessage(this.gameObject.name, "Start loading Config");
+        Debug.Log("Start loading config");
         if (File.Exists(ConfigPlace))
         {
             StreamReader sr = new StreamReader(ConfigPlace);
@@ -257,11 +252,11 @@ public class GameManager : MonoBehaviour
                 Config.Add(parms[0], parms[1]);
             }
             sr.Close();
-            AddDubugMessage(this.gameObject.name, "Config succsessfuly loaded");
+            Debug.Log("Config successfly loaded!");
         }
         else
         {
-            AddDubugMessage(this.gameObject.name, "No Config File.", 2);
+            Debug.Log("No config file");
             ResetConfig();
         }
     }
@@ -270,7 +265,7 @@ public class GameManager : MonoBehaviour
     {
         if (Config.Count < 1)
         {
-            AddDubugMessage(this.gameObject.name, "Can`t save Config. It is clear");
+            Debug.Log("Can`t save config. It is clear!");
             return;
         }
         if (File.Exists(ConfigPlace)) File.Delete(ConfigPlace);
@@ -281,12 +276,12 @@ public class GameManager : MonoBehaviour
             sr.WriteLine(kvp.Key + " " + kvp.Value);
         }
         sr.Close();
-        AddDubugMessage(this.gameObject.name, "Config saved", 2);
+        Debug.Log("Config saved");
     }
 
     public void ResetConfig()
     {
-        AddDubugMessage(this.gameObject.name, "Creating new Config", 2);
+        Debug.Log("Reset config");
         if (Config.Count > 0) Config.Clear();
         Config.Add("Swidth", Screen.width.ToString());
         Config.Add("SHeight", Screen.height.ToString());
@@ -295,8 +290,10 @@ public class GameManager : MonoBehaviour
 
     //---------- End of Config functions -----------//
 
-    //-------------- Debug functions ---------------//
 
+
+    //-------------- Debug functions ---------------//
+    /*
     private void EnableDebug()
     {
         DebugShow = !DebugShow;
@@ -374,7 +371,7 @@ public class GameManager : MonoBehaviour
 
         if (!succsess) AddDubugMessage("System", "No such command: " + command);
     }
-
+    */
     //----------- End of Debug functions ------------//
 }
        

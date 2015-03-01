@@ -7,50 +7,76 @@ using System.Collections.Generic;
 public class StartNewGame : MenuManager {
 
     [Header("Elements")]
+    public Slider[] InfoSliders;
     public InputField PlayerNameField;
-    public Slider WorldSizeSlider;
-    public Slider WorldDarknessSlider;
+    public GameObject WarningMessage;
 
-    private string PlayerName;
-    private float WorldSize;
-    private float WorldDarkness;
+    private Dictionary<string, string> Info = new Dictionary<string, string>();
+    private Dictionary<string, string> InfoBack;
+    List<string> InfoSaved;
+    private string PlayerName = "";
+
+    public void Start()
+    {
+        foreach (Slider slider in InfoSliders)
+        {
+            Info.Add(slider.name, slider.value.ToString());
+            Slider tmp = slider;
+            slider.onValueChanged.AddListener(delegate { ChangeSliderValue(tmp); });
+        }
+        InfoBack = new Dictionary<string, string>(Info);
+        InfoSaved = new List<string>(GM.Load().Keys);
+
+        if (WarningMessage)
+        {
+            WarningMessage.SetActive(false);
+        }
+    }
 
     public void StartGame()
     {
-        if (PlayerName == "") return;
-        
-        Dictionary<string, string> Info = new Dictionary<string, string>();
-        Dictionary<string, string> Data = new Dictionary<string, string>();
+        PlayerName = PlayerName.Replace(" ", string.Empty);
+        if (PlayerName == "")
+        {
+            PlayerName = "Name can`t be empty";
+            return;
+        }
 
-        Info.Add("WorldSize", WorldSize.ToString());
-        Info.Add("WorldDarkness", WorldDarkness.ToString());
-
-        GM.Save(PlayerName, Info, Data);
+        GM.Save(PlayerName, Info);
         GM.Load(PlayerName);
     }
 
     public void Clear()
     {
-        WorldDarkness = WorldDarknessSlider.value = 6f;
-        WorldSize = WorldSizeSlider.value = 3f;
-        PlayerName = PlayerNameField.text = "";
+        foreach (Slider slider in InfoSliders)
+        {
+            int value = int.Parse(InfoBack[slider.name].ToString());
+            slider.value = value;
+        }
+        PlayerNameField.text = PlayerName = "";
+        Info = new Dictionary<string, string>(InfoBack);
     }
 
-    public void ChangeWorldSize()
+    public void ChangeSliderValue(Slider slider)
     {
-        WorldSize = WorldSizeSlider.value;
-    }
-
-    public void ChangeDarkness()
-    {
-        WorldDarkness = WorldDarknessSlider.value;
+        if (!Info.ContainsKey(slider.name)) return;
+        Info[slider.name] = slider.value.ToString();
+        Debug.Log("Chenge value of " + slider.name + " to " + slider.value.ToString());
     }
 
     public void ChangeName()
     {
         string st = PlayerNameField.text;
         st.Replace(" ",string.Empty);
-        PlayerName = st;
-        //GM.AddDubugMessage("StartNewGame", "Name Changed to " + PlayerName);
+        PlayerName = PlayerNameField.text;
+
+        if (InfoSaved.Contains(PlayerName) && WarningMessage)
+        {
+            WarningMessage.SetActive(true);
+        }
+        else if(!InfoSaved.Contains(PlayerName) && WarningMessage && WarningMessage.activeInHierarchy)
+        {
+            WarningMessage.SetActive(false);
+        }
     }
 }
