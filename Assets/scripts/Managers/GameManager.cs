@@ -11,29 +11,18 @@ using System.Runtime.Serialization;
 public class GameManager : MonoBehaviour
 {   
     protected GameManager() { }
-    private static GameManager instance = null;
-    public static GameManager Instance
-    {
-        get
-        {
-            if (GameManager.instance == null)
-            {
-                GameManager.instance = new GameManager();
-                DontDestroyOnLoad(GameManager.instance);
-            }
-            return GameManager.instance;
-        }
-
-    }
+    public static GameManager Instance { get; private set; }
     private static bool IsStart = true;
 
-    //Evets
-    public delegate void GMVoidScriptHolder();
-    public event GMVoidScriptHolder OnSceneChenge;
-    public event GMVoidScriptHolder OnAppQuit;
-    public event GMVoidScriptHolder OnConfigChange;
+    //------------------- Evets -------------------------//
 
-    //Visible variables
+    public delegate void GMVoidScriptHolder();
+    public event GMVoidScriptHolder OnChengeScene;
+    public event GMVoidScriptHolder OnQuitApp;
+    public event GMVoidScriptHolder OnChangeConfig;
+
+    //------------------- Visible variables -------------//
+    
     [Header("Variables")]
     public bool UseDebug = true;
     public bool UseNewConfig = false;
@@ -48,9 +37,11 @@ public class GameManager : MonoBehaviour
     [Range(1f, 5f)]
     public int DebugOutCodeMax;
 
-    //Hidden variables
+    //----------------- Hidden variables --------------//
+
     public Dictionary<string, string> Config { get; private set; }
     private string ConfigPlace = "Data/config";
+
     private bool DebugShow= false;
     public List<string> DebugList { get; private set; }
 
@@ -58,17 +49,27 @@ public class GameManager : MonoBehaviour
     private string SavesAdd = ".nng";
     private string SavesInfoAdd = ".info";
 
-    //Functions
+    public Dictionary<string, string> GameInfo { get; private set; }
+    public Dictionary<string, string> GameData { get; private set; }
+    public string GameName { get; private set; }
+
+    //----------------- Functions block ---------------//
 
     private void Awake()
     {
+
+        if (Instance == null) Instance = this;
+        else Destroy(this);
+
         if (!IsStart) return;
+
         IsStart = false;
         OnAwake();
     }
     
     private void OnAwake()
     {
+        DontDestroyOnLoad(this.gameObject);
 
         Config = new Dictionary<string,string>();
         DebugList = new List<string>();
@@ -92,68 +93,63 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //------------- Event functions --------------//
+
     public void ChengeScene(string _scene)
     {
-        OnSceneChenge();
+        OnChengeScene();
         Application.LoadLevel(_scene);
     }
-
-    public void OnApplicationQuit()
+    public void ChengeScene(int scene)
     {
-        GameManager.instance = null;
+        if (OnChengeScene != null) OnChengeScene();
+        Application.LoadLevel(scene);
     }
 
-    //SAVES
-
-    public Dictionary<string, string> Load(string name = "")
+    public void QuitApp()
     {
-        Dictionary<string, string> SavesData = new Dictionary<string,string>();
-        if (!Directory.Exists(SavesPath))
+        OnQuitApp();
+       // GameManager.instance = null;
+        Application.Quit();
+    }
+
+    public void ChangeConfig()
+    {
+        if (OnChangeConfig == null) return;
+        OnChangeConfig();
+    }
+
+    //--------- End of Event functions -----------//
+
+    //------------- Saves functions --------------//
+
+    public Dictionary<string, Dictionary<string, string>> Load()
+    {
+        Dictionary<string, Dictionary<string, string>> SavesData = new Dictionary<string,Dictionary<string,string>>();
+
+        if(!Directory.Exists(SavesPath))
         {
             Directory.CreateDirectory(SavesPath);
             return SavesData;
         }
-        if (name == "")
+
+        string[] FileNames = Directory.GetFiles(@SavesPath, SavesInfoAdd);
+        foreach(string file in FileNames)
         {
-            string[] SavesNames = Directory.GetFiles(@SavesPath, SavesInfoAdd);
-            foreach (string file in SavesNames)
-            {
-                string Save = SavesPath + file;
-                string SaveInfo;
+            string SaveName = file;
+            print("Load File = " + file);
 
-                FileStream fs = new FileStream(Save, FileMode.Open);
-                try
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    SaveInfo = (string)bf.Deserialize(fs);
-                    SavesData.Add(file, SaveInfo);
-                }
-                catch
-                {
-                    AddDubugMessage("SaveLoadSystem", "Can`t load info of save file: " + file, 3);
-                    throw;
-                }
-                finally
-                {
-                    fs.Close();
-                }
-            }
-        }
-        else
-        {
-            string Save = SavesPath + name + SavesAdd;
-            if (!File.Exists(Save)) return SavesData;
-
-            FileStream fs = new FileStream(Save, FileMode.Open);
-
+            Dictionary<string, string> SaveInfo = new Dictionary<string,string>();
+            FileStream fs = new FileStream(SavesPath + SaveName + SavesInfoAdd, FileMode.Open);
             try
             {
                 BinaryFormatter bf = new BinaryFormatter();
-                SavesData = (Dictionary<string, string>)bf.Deserialize(fs);
+                SaveInfo = (Dictionary<string, string>)bf.Deserialize(fs);
+                SavesData.Add(SaveName, SaveInfo);
             }
-            catch (SerializationException e)
+            catch
             {
-                AddDubugMessage("SaveLoadSystem", "Can`t load file " + Save + " - " + e.Message, 4);
+                AddDubugMessage("SaveLoadSystem", "Can`t load info of save file: " + file, 3);
                 throw;
             }
             finally
@@ -164,10 +160,63 @@ public class GameManager : MonoBehaviour
         return SavesData;
     }
 
-    public void Save(Dictionary<string, string> Data, string Info, string Name)
+    public void Load(string name)
     {
-        string SaveData = SavesPath + name + SavesAdd;
-        string SaveInfo = SavesPath + name + SavesInfoAdd;
+        if (!Directory.Exists(SavesPath))
+        {
+            Directory.CreateDirectory(SavesPath);
+            return;
+        }
+
+
+        bool success = false;
+        string SaveInfoPath = SavesPath + name + SavesAdd;
+        string SaveDataPath = SavesPath + name + SavesInfoAdd;
+
+        if (!File.Exists(SaveInfoPath) || !File.Exists(SaveDataPath)) return;
+
+        FileStream fsData = new FileStream(SaveDataPath, FileMode.Open);
+        FileStream fsInfo = new FileStream(SaveInfoPath, FileMode.Open);
+
+        try
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+
+            GameData = (Dictionary<string, string>)bf.Deserialize(fsData);
+            GameInfo = (Dictionary<string, string>)bf.Deserialize(fsInfo);
+            GameName = name;
+
+            success = true;
+        }
+        catch (SerializationException e)
+        {
+            AddDubugMessage("SaveLoadSystem", "Can`t load file " + name + " - " + e.Message, 4);
+
+            GameData = new Dictionary<string, string>();
+            GameInfo = new Dictionary<string, string>();
+            GameName = "";
+
+            throw;
+        }
+        finally
+        {
+            fsData.Close();
+            fsInfo.Close();
+        }
+        if (success)
+        {
+            ChengeScene(2);
+        }
+    }
+
+    public void Save(string name, Dictionary<string, string> Info, Dictionary<string, string> Data)
+    {
+        GameName = name;
+        GameInfo = Info;
+        GameData = Data;
+
+        string SaveData = SavesPath + GameName + SavesAdd;
+        string SaveInfo = SavesPath + GameName + SavesInfoAdd;
 
         FileStream fsData = new FileStream(SaveData, FileMode.Create);
         FileStream fsInfo = new FileStream(SaveInfo, FileMode.Create);
@@ -180,7 +229,7 @@ public class GameManager : MonoBehaviour
         }
         catch (SerializationException e)
         {
-            AddDubugMessage("SaveLoadSystem", "Can`t save file: " + Name + " - " + e.Message, 5);
+            AddDubugMessage("SaveLoadSystem", "Can`t save file: " + GameName + " - " + e.Message, 5);
             throw;
         }
         finally
@@ -189,7 +238,10 @@ public class GameManager : MonoBehaviour
             fsInfo.Close();
         }
     }
-    //CONFIG
+
+    //------------- End of Saves functions --------------//
+
+    //---------------- Config functions -----------------//
 
     private void LoadConfig()
     {
@@ -241,7 +293,9 @@ public class GameManager : MonoBehaviour
         SaveConfig();
     }
 
-    //DEBUG
+    //---------- End of Config functions -----------//
+
+    //-------------- Debug functions ---------------//
 
     private void EnableDebug()
     {
@@ -320,5 +374,7 @@ public class GameManager : MonoBehaviour
 
         if (!succsess) AddDubugMessage("System", "No such command: " + command);
     }
+
+    //----------- End of Debug functions ------------//
 }
        
