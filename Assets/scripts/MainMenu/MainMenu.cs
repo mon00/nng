@@ -1,32 +1,38 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[SerializeField]
-public class MainMenu : MenuManager {
+namespace game
+{
 
-    public GameObject[] MainMenuElements;
-
-    public void Start()
+    [SerializeField]
+    public class MainMenu : MenuManager
     {
-        OnElementClick(null);
 
-    }
+        public GameObject[] MainMenuElements;
 
-    public void OnElementClick(GameObject TargetObject)
-    {
-        if (MainMenuElements.Length == 0) return;
-        foreach(GameObject go in MainMenuElements)
+        public void Start()
         {
-            if (go == TargetObject)
+            OnElementClick(null);
+
+        }
+
+        public void OnElementClick(GameObject TargetObject)
+        {
+            if (MainMenuElements.Length == 0) return;
+            foreach (GameObject go in MainMenuElements)
             {
-                bool Active;
-                Active = !go.activeInHierarchy;
-                go.SetActive(Active);
-            }
-            else
-            {
-                go.SetActive(false);
+                if (go == TargetObject)
+                {
+                    bool Active;
+                    Active = !go.activeInHierarchy;
+                    go.SetActive(Active);
+                }
+                else
+                {
+                    go.SetActive(false);
+                }
             }
         }
     }
+
 }

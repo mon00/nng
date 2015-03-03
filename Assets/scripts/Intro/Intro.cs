@@ -1,9 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Intro : MonoBehaviour {
-    void Update()
+namespace game
+{
+
+    public class Intro : MonoBehaviour
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) Application.LoadLevel("MainMenu");
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse0)) Application.LoadLevel("MainMenu");
+        }
     }
+
 }

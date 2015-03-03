@@ -2,20 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Test : MonoBehaviour {
+namespace game
+{
 
-    GameManager GM;
-
-    void Awake()
+    public class Test : MonoBehaviour
     {
-        GM = GameObject.Find("GameManager").GetComponent<GameManager>();
 
-        Dictionary<string, string> test = new Dictionary<string, string>();
-        test = GM.Config;
+        GameManager GM;
 
-        foreach (KeyValuePair<string, string> kvp in test)
+        void Awake()
         {
-            print(kvp.Key + " --- " + kvp.Value);
+            GM = GameObject.Find("GameManager").GetComponent<GameManager>();
+
+            Dictionary<string, string> test = new Dictionary<string, string>();
+            test = GM.Config;
+
+            foreach (KeyValuePair<string, string> kvp in test)
+            {
+                print(kvp.Key + " --- " + kvp.Value);
+            }
         }
     }
+
 }

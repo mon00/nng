@@ -2,13 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MenuManager : MonoBehaviour {
+namespace game
+{
 
-    [HideInInspector]
-    public GameManager GM;
-
-    public void Awake()
+    public class MenuManager : MonoBehaviour
     {
-        GM = GameObject.Find("GameManager").GetComponent<GameManager>();
+
+        [HideInInspector]
+        public GameManager GM;
+
+        public void Awake()
+        {
+            GM = GameObject.Find("GameManager").GetComponent<GameManager>();
+        }
     }
+
 }
