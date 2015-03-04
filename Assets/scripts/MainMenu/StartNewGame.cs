@@ -11,26 +11,45 @@ namespace game
     {
 
         [Header("Elements")]
-        public Slider[] InfoSliders;
         public InputField PlayerNameField;
         public GameObject WM_NameAlreadyExists;
+        public GameObject Main;
+        public GameObject Additional;
 
         private Dictionary<string, string> Info = new Dictionary<string, string>();
         private Dictionary<string, string> InfoBack;
         List<string> InfoSaved;
+
         private string PlayerName = "";
+        private string infoParmName;
+        private string infoParmValue;
+        private ToggleGroup[] ToggleGroups;
+
 
         public void Start()
         {
-            foreach (Slider slider in InfoSliders)
-            {
-                Info.Add(slider.name, slider.value.ToString());
-                Slider tmp = slider;
-                slider.onValueChanged.AddListener(delegate { ChangeSliderValue(tmp); });
-            }
-            InfoBack = new Dictionary<string, string>(Info);
-            InfoSaved = new List<string>(GM.Load().Keys);
+            ToggleGroups = GetComponentsInChildren<ToggleGroup>();
 
+            foreach (ToggleGroup CurentToggleGroup in ToggleGroups)
+            {
+                infoParmName = CurentToggleGroup.name;
+
+                Toggle[] Toggles = CurentToggleGroup.GetComponentsInChildren<Toggle>();
+                foreach (Toggle toggle in Toggles)
+                {
+                    Toggle tmp = toggle;
+                    toggle.onValueChanged.AddListener( delegate {ChangeToggleValue(tmp);});
+                    if (toggle.isOn) infoParmValue = toggle.name;
+                }
+
+                Info.Add(infoParmName, infoParmValue);
+
+                Debug.Log(infoParmName + " -- " + infoParmValue);
+            }
+
+            InfoBack = new Dictionary<string,string>(Info);
+            InfoSaved = new List<string>(GM.Load().Keys);
+            
             if (WM_NameAlreadyExists)
             {
                 WM_NameAlreadyExists.SetActive(false);
@@ -52,20 +71,30 @@ namespace game
 
         public void Clear()
         {
-            foreach (Slider slider in InfoSliders)
+            foreach (ToggleGroup CurentToggleGroup in ToggleGroups)
             {
-                int value = int.Parse(InfoBack[slider.name].ToString());
-                slider.value = value;
+                infoParmName = CurentToggleGroup.name;
+
+                Toggle[] Toggles = CurentToggleGroup.GetComponentsInChildren<Toggle>();
+                foreach (Toggle toggle in Toggles)
+                {
+                    if (InfoBack[infoParmName] == toggle.name) toggle.isOn = true;
+                }
             }
+
             PlayerNameField.text = PlayerName = PlayerNameField.GetComponentInChildren<Text>().text = "";
             Info = new Dictionary<string, string>(InfoBack);
+
+            Debug.Log("Cleared!");
         }
 
-        public void ChangeSliderValue(Slider slider)
+        public void ChangeToggleValue (Toggle toggle)
         {
-            if (!Info.ContainsKey(slider.name)) return;
-            Info[slider.name] = slider.value.ToString();
-            Debug.Log("Chenge value of " + slider.name + " to " + slider.value.ToString());
+            if (!toggle.isOn) return;
+            string infoParmName = toggle.transform.GetComponentInParent<ToggleGroup>().name;
+            string infoParmValue = toggle.name;
+            Info[infoParmName] = infoParmValue;
+            Debug.Log(infoParmName + " changed to " + infoParmValue);
         }
 
         public void ChangeName()

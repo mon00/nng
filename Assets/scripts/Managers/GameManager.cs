@@ -12,6 +12,7 @@ namespace game
 
     public enum Scene { Intro = 0, MainMenu = 1, Game = 2 };
 
+
     [SerializeField]
     public class GameManager : MonoBehaviour
     {
@@ -45,6 +46,7 @@ namespace game
         public bool UseNewConfig = false;
         public bool UseLocalization = false;
 
+        /*
         [Header("Debug")]
         public Canvas DebugArea;
         public GameObject DebugInput;
@@ -53,6 +55,11 @@ namespace game
         public int DebugOutCodeMin;
         [Range(1f, 5f)]
         public int DebugOutCodeMax;
+        */
+
+        [Header("Standart config Options")]
+        public bool useFullScreen = true;
+        public QualityLevel QualityLevel = QualityLevel.Good; 
 
         //----------------- Hidden variables --------------//
 
@@ -61,7 +68,7 @@ namespace game
         private string SavesAdd = ".nng";
         private string SavesInfoAdd = ".info";
 
-        public Dictionary<string, string> Config { get; private set; }
+        public Dictionary<string, int> Config { get; private set; }
         public Dictionary<string, string> GameInfo { get; private set; }
         public Dictionary<string, string> GameData { get; private set; }
 
@@ -75,7 +82,6 @@ namespace game
 
         private void Awake()
         {
-
             _instance = this;
 
             if (!IsStart) return;
@@ -88,14 +94,7 @@ namespace game
         {
             DontDestroyOnLoad(this.gameObject);
 
-            Config = new Dictionary<string, string>();
-
-            if (DebugOutCodeMin > DebugOutCodeMax)
-            {
-                int tmp = DebugOutCodeMax;
-                DebugOutCodeMax = DebugOutCodeMin;
-                DebugOutCodeMin = tmp;
-            }
+            Config = new Dictionary<string, int>();
 
             if (UseNewConfig) ResetConfig();
             else LoadConfig();
@@ -129,8 +128,10 @@ namespace game
         public void ChengeConfig()
         {
             Debug.Log("Change Config");
-            if (OnChengeConfig != null) return;
-            OnChengeConfig();
+            if (OnChengeConfig != null) OnChengeConfig();
+
+            QualitySettings.SetQualityLevel(Config["QualityLevel"]);
+            
         }
 
         //--------- End of Event functions -----------//
@@ -278,7 +279,9 @@ namespace game
                 {
                     string[] parms = line.Split(new char[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
                     if (parms.Length != 2) continue;
-                    Config.Add(parms[0], parms[1]);
+                    int value;
+                    if(!Int32.TryParse(parms[1], out value)) continue;
+                    Config.Add(parms[0], value);
                 }
                 sr.Close();
                 Debug.Log("Config successfly loaded!");
@@ -290,9 +293,9 @@ namespace game
             }
         }
 
-        public void SaveConfig()
+        public void SaveConfig(Dictionary<string, int> NewConfig)
         {
-            if (Config.Count < 1)
+            if (NewConfig.Count < 1)
             {
                 Debug.Log("Can`t save config. It is clear!");
                 return;
@@ -300,21 +303,31 @@ namespace game
             if (File.Exists(ConfigPlace)) File.Delete(ConfigPlace);
 
             StreamWriter sr = new StreamWriter(ConfigPlace);
-            foreach (KeyValuePair<string, string> kvp in Config)
+            foreach (KeyValuePair<string, int> kvp in NewConfig)
             {
                 sr.WriteLine(kvp.Key + " " + kvp.Value);
             }
             sr.Close();
-            Debug.Log("Config saved");
+
+            Config = NewConfig;
+
+            ChengeConfig();
         }
 
         public void ResetConfig()
         {
             Debug.Log("Reset config");
-            if (Config.Count > 0) Config.Clear();
-            Config.Add("Swidth", Screen.width.ToString());
-            Config.Add("SHeight", Screen.height.ToString());
-            SaveConfig();
+
+            Dictionary<string, int> NewConfig = new Dictionary<string, int>();
+
+            int UseFullScreen = (useFullScreen) ? 1 : 0;
+
+            NewConfig.Add("ScreenWidth", Screen.width);
+            NewConfig.Add("ScreenHeight", Screen.height);
+            NewConfig.Add("UseFullScreen", UseFullScreen);
+            NewConfig.Add("QualityLevel", (int)QualityLevel);
+
+            SaveConfig(NewConfig);
         }
 
         //---------- End of Config functions -----------//

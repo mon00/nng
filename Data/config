@@ -1,2 +1,4 @@
-Swidth 1230
-SHeight 459
+ScreenWidth 1600
+ScreenHeight 730
+UseFullScreen 1
+QualityLevel 3
