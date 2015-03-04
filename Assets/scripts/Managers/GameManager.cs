@@ -138,47 +138,63 @@ namespace game
 
         //------------- Saves functions --------------//
 
-        public Dictionary<string, Dictionary<string, string>> Load()
+        public List<string> LoadNames()
         {
-            Debug.Log("Try to load save files Info");
+            Debug.Log("Try to load save`s files names");
 
-            Dictionary<string, Dictionary<string, string>> SavesData = new Dictionary<string, Dictionary<string, string>>();
+            List<string> names = new List<string>();
 
             if (!Directory.Exists(SavesPath))
             {
                 Directory.CreateDirectory(SavesPath);
-                return SavesData;
+                return names;
             }
 
-            string[] FileNames = Directory.GetFiles(@SavesPath, "*" + SavesInfoAdd, SearchOption.TopDirectoryOnly);
-            foreach (string file in FileNames)
+            string[] fullNames = Directory.GetFiles(@SavesPath, "*" + SavesInfoAdd, SearchOption.TopDirectoryOnly);
+
+            foreach (string file in fullNames)
             {
-                string SaveName = Path.GetFileNameWithoutExtension(SavesPath + file);
-                print("Load File Info = " + SaveName);
-
-                Dictionary<string, string> SaveInfo = new Dictionary<string, string>();
-                FileStream fs = new FileStream(SavesPath + SaveName + SavesInfoAdd, FileMode.Open);
-                try
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    SaveInfo = (Dictionary<string, string>)bf.Deserialize(fs);
-                    SavesData.Add(SaveName, SaveInfo);
-                }
-                catch (SerializationException e)
-                {
-                    Debug.Log("Cant load file Info " + name + ". Error: " + e.Message);
-                    throw;
-                }
-                finally
-                {
-                    fs.Close();
-                }
+                names.Add(Path.GetFileNameWithoutExtension(file));
             }
-            Debug.Log("End of loading save files Info");
-            return SavesData;
+            return names;
         }
 
-        public void Load(string name)
+        public Dictionary<string, string> LoadInfo(string fileName)
+        {
+            Debug.Log("Try to load Info of " + fileName);
+
+            Dictionary<string, string> saveInfo = new Dictionary<string, string>();
+
+            if (!Directory.Exists(SavesPath))
+            {
+                Directory.CreateDirectory(SavesPath);
+                return saveInfo;
+            }
+
+            string file = SavesPath + fileName + SavesInfoAdd;
+
+            if (!File.Exists(file)) return saveInfo;
+
+            FileStream infoStream = new FileStream(file, FileMode.Open);
+
+            try
+            {
+                BinaryFormatter infoFormatter = new BinaryFormatter();
+                saveInfo = (Dictionary<string, string>)infoFormatter.Deserialize(infoStream);
+            }
+            catch (SerializationException e)
+            {
+                Debug.LogError("Cant read info of " + fileName + ". Error: " + e.Message);
+            }
+            finally
+            {
+                infoStream.Close();
+            }
+
+            return saveInfo;
+        }
+
+        public void LoadGame(string name)
         {
             if (!Directory.Exists(SavesPath))
             {

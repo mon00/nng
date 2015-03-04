@@ -18,13 +18,13 @@ namespace game
 
         private Dictionary<string, string> Info = new Dictionary<string, string>();
         private Dictionary<string, string> InfoBack;
-        List<string> InfoSaved;
+        List<string> savedNames;
 
         private string PlayerName = "";
         private string infoParmName;
         private string infoParmValue;
         private ToggleGroup[] ToggleGroups;
-
+        private bool activeAdditionals = false;
 
         public void Start()
         {
@@ -48,12 +48,14 @@ namespace game
             }
 
             InfoBack = new Dictionary<string,string>(Info);
-            InfoSaved = new List<string>(GM.Load().Keys);
+            savedNames = new List<string>(GM.LoadNames());
             
             if (WM_NameAlreadyExists)
             {
                 WM_NameAlreadyExists.SetActive(false);
             }
+
+            Additional.SetActive(activeAdditionals);
         }
 
         public void StartGame()
@@ -66,7 +68,7 @@ namespace game
             }
 
             GM.Save(PlayerName, Info);
-            GM.Load(PlayerName);
+            GM.LoadGame(PlayerName);
         }
 
         public void Clear()
@@ -103,14 +105,20 @@ namespace game
             st.Replace(" ", string.Empty);
             PlayerName = PlayerNameField.text;
 
-            if (InfoSaved.Contains(PlayerName) && WM_NameAlreadyExists)
+            if (savedNames.Contains(PlayerName) && WM_NameAlreadyExists)
             {
                 WM_NameAlreadyExists.SetActive(true);
             }
-            else if (!InfoSaved.Contains(PlayerName) && WM_NameAlreadyExists && WM_NameAlreadyExists.activeInHierarchy)
+            else if (!savedNames.Contains(PlayerName) && WM_NameAlreadyExists && WM_NameAlreadyExists.activeInHierarchy)
             {
                 WM_NameAlreadyExists.SetActive(false);
             }
+        }
+
+        public void ActiveAddtionals()
+        {
+            activeAdditionals = !activeAdditionals;
+            Additional.SetActive(activeAdditionals);
         }
     }
 
