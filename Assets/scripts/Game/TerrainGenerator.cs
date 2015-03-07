@@ -36,6 +36,28 @@ namespace game
         {
             Data = new Cell[Size, Size];
 
+            for (int i = 0; i < (CellTypes.Length - 1); i++)
+            {
+                if (i < 0) i = 0;
+                Cell firstCell = CellTypes[i];
+                Cell secondCell = CellTypes[i + 1];
+                bool changePlaces = false;
+                int firstMaxNear = (firstCell.MaxCellNear == 0) ? CellTypes.Length : firstCell.MaxCellNear;
+                int secondMaxNear = (secondCell.MaxCellNear == 0) ? CellTypes.Length : secondCell.MaxCellNear;
+
+                if (firstCell.MaxCellNear == 0 && secondCell.MaxCellNear == 0) continue;
+                else if (firstCell.MaxCellNear == 0) continue;
+                else if (secondCell.MaxCellNear == 0) changePlaces = true;
+                else if (secondCell.MaxCellNear > firstCell.MaxCellNear) changePlaces = true;
+                
+                if(changePlaces)
+                {
+                    CellTypes[i] = secondCell;
+                    CellTypes[i + 1] = firstCell;
+                    i -= 2;
+                }
+            }
+
             foreach (Cell cell in CellTypes)
             {
                 int CurrentCount = 0;
@@ -138,21 +160,10 @@ namespace game
         void Infection(Cell firstCell, Cell secondCell, int i, int j)
         {
             bool success = false;
-
-            print("ADS");
-
-            if (secondCell == null)
-            {
-                success = true;
-            }
+            if (secondCell == null) success = true;
             else if (firstCell.BiomCellName == secondCell.BiomCellName) return;
             else if (StaticCellNames.Contains(secondCell.BiomCellName)) return;
-            else if (secondCell.MinCount == 0 && secondCell.CurrentCount < secondCell.MinCount)
-            {
-                print("123");
-                return;
-
-            }
+            else if (secondCell.MinCount == 0 && secondCell.CurrentCount < secondCell.MinCount) return;
             else
             {
                 float firstStrength = firstCell.Strength;
@@ -181,36 +192,42 @@ namespace game
         {
             if (ActiveCells.Count == 0) return true;
             if (NearCellBioms.Contains(CurrentCell)) return false;
-            NearCellBioms.Add(CurrentCell);
 
             int NearThis = 0;
-
             foreach (Cell cell in ActiveCells)
             {
-                int Range = (int)Mathf.Sqrt(Mathf.Pow(Mathf.Abs(CurrentCell.I - cell.I), 2) + Mathf.Pow(Mathf.Abs(CurrentCell.J - cell.J), 2));
-                
-                if (Range < StepsNumber * 1.7 && Range > StepsNumber * Dispersion)
-                {
-                    NearThis++;
-                }
+                if (CurrentCell == cell) continue;
+
+                float Range = (float)Mathf.Sqrt(Mathf.Pow(Mathf.Abs(CurrentCell.I - cell.I), 2) + Mathf.Pow(Mathf.Abs(CurrentCell.J - cell.J), 2));
+                float Factor = (cell.MaxCount != 0 && cell.MaxCount < StepsNumber) ? (float)cell.MaxCount / StepsNumber : 1;
+                float Factor2 = (CurrentCell.MaxCount != 0 && CurrentCell.MaxCount < StepsNumber) ? (float)CurrentCell.MaxCount / StepsNumber : 1;
+
+                if (Range < StepsNumber * 1.55 * (Factor + Factor2) / 2 && Range > StepsNumber * Dispersion * (Factor + Factor2) / 2) NearThis++;
+                else if (Range < StepsNumber * Dispersion * (Factor + Factor2) / 2) return false;
             }
+            if (CurrentCell.MaxCellNear != 0 && NearThis > CurrentCell.MaxCellNear || NearThis < 1) return false;
 
-            if (NearThis > (2 + (CellTypes.Length - 2) * (1 - Dispersion))) return false;
+            NearCellBioms.Add(CurrentCell);
+
+            if (NearCellBioms.Count == ActiveCells.Count) return true;
+
 
             foreach (Cell cell in ActiveCells)
             {
-                if (NearCellBioms.Contains(cell)) continue;
-                int Factor = (cell.MaxCount != 0 && cell.MaxCount < StepsNumber) ? cell.MaxCount * StepsNumber : 1;
-                int Range = (int)Mathf.Sqrt(Mathf.Pow(Mathf.Abs(CurrentCell.I - cell.I), 2) + Mathf.Pow(Mathf.Abs(CurrentCell.J - cell.J), 2));
-                if (Range * Factor < StepsNumber * 1.5 && Range > StepsNumber * Dispersion)
+                if (cell == CurrentCell) continue;
+                print(CurrentCell.BiomCellName + " -- " + cell.BiomCellName);
+                float Range = (float)Mathf.Sqrt(Mathf.Pow(Mathf.Abs(CurrentCell.I - cell.I), 2) + Mathf.Pow(Mathf.Abs(CurrentCell.J - cell.J), 2));
+                float Factor = (cell.MaxCount != 0 && cell.MaxCount < StepsNumber) ? (float)cell.MaxCount / StepsNumber : 1;
+                float Factor2 = (CurrentCell.MaxCount != 0 && CurrentCell.MaxCount < StepsNumber) ? (float)CurrentCell.MaxCount / StepsNumber : 1;
+
+                if (Range < StepsNumber * 1.55 * (Factor + Factor2) / 2 && Range > StepsNumber * Dispersion * (Factor + Factor2) / 2)
                 {
                     if (CheckNearBioms(cell)) return true;
                 }
-                 
             }
-            print(CurrentCell.BiomCellName);
-            if (NearCellBioms.Count == ActiveCells.Count + 1) return true;
-            else return false;
+
+            if (NearCellBioms.Count == ActiveCells.Count) return true;
+            return false;
         }
 
         void PutClearCellPrefab(int i, int j)
@@ -229,6 +246,7 @@ namespace game
         public float Strength;
         public int MaxCount = 0;
         public int MinCount = 0;
+        public int MaxCellNear;
         public GameObject prefab;
 
         [HideInInspector]
