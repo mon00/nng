@@ -18,7 +18,6 @@ namespace game
 
         private Dictionary<string, string> Info = new Dictionary<string, string>();
         private Dictionary<string, string> InfoBack;
-        List<string> savedNames;
 
         private string PlayerName = "";
         private string infoParmName;
@@ -48,7 +47,6 @@ namespace game
             }
 
             InfoBack = new Dictionary<string,string>(Info);
-            savedNames = new List<string>(GM.LoadNames());
             
             if (WM_NameAlreadyExists)
             {
@@ -67,8 +65,8 @@ namespace game
                 return;
             }
 
-            GM.Save(PlayerName, Info);
-            GM.LoadGame(PlayerName);
+            GameManager.Instance.Save(PlayerName, Info);
+            GameManager.Instance.LoadGame(PlayerName);
         }
 
         public void Clear()
@@ -105,11 +103,11 @@ namespace game
             st.Replace(" ", string.Empty);
             PlayerName = PlayerNameField.text;
 
-            if (savedNames.Contains(PlayerName) && WM_NameAlreadyExists)
+            if (GameNames.Contains(PlayerName) && WM_NameAlreadyExists)
             {
                 WM_NameAlreadyExists.SetActive(true);
             }
-            else if (!savedNames.Contains(PlayerName) && WM_NameAlreadyExists && WM_NameAlreadyExists.activeInHierarchy)
+            else if (!GameNames.Contains(PlayerName) && WM_NameAlreadyExists && WM_NameAlreadyExists.activeInHierarchy)
             {
                 WM_NameAlreadyExists.SetActive(false);
             }

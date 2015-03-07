@@ -26,11 +26,39 @@ namespace game
 
             set
             {
-                if (Instance == null) Instance = this;
+                if (Instance == null)
+                {
+                    Instance = this;
+                    DontDestroyOnLoad(this.gameObject);
+                }
                 else Destroy(this.gameObject);
             }
         }
-        private static bool IsStart = true;
+
+        //------------------- Visible variables -------------//
+
+        public bool ResetConfigOnStart;
+
+        //----------------- Hidden variables --------------//
+
+        private string configFile = "Data/config";
+        private string saveDirectory = "Data/Save/";
+        private string saveDataExtension = ".nng";
+        private string saveInfoExtension = ".info";
+
+        public Dictionary<string, string> GameInfo { get; private set; }
+        public GameData GameData { get; private set; }
+        public string GameName { get; private set; }
+
+        public Dictionary<string, int> Config { get; private set; }
+        private Dictionary<string, int> _config = new Dictionary<string, int>
+        {
+            {"FullScreen", 1},
+            {"Soundvalue", 100},
+            {"QualityLevel", 3},
+        };
+
+        public Scene CurentScene { get; private set; }
 
         //------------------- Evets -------------------------//
 
@@ -38,69 +66,25 @@ namespace game
         public event GMVoidScriptHolder OnChengeScene;
         public event GMVoidScriptHolder OnQuitApp;
         public event GMVoidScriptHolder OnChengeConfig;
-
-        //------------------- Visible variables -------------//
-
-        [Header("Variables")]
-        //public bool UseDebug = true;
-        public bool UseNewConfig = false;
-        public bool UseLocalization = false;
-
-        /*
-        [Header("Debug")]
-        public Canvas DebugArea;
-        public GameObject DebugInput;
-        public GameObject DebugOutput;
-        [Range(1f, 5f)]
-        public int DebugOutCodeMin;
-        [Range(1f, 5f)]
-        public int DebugOutCodeMax;
-        */
-
-        [Header("Standart config Options")]
-        public bool useFullScreen = true;
-        public QualityLevel QualityLevel = QualityLevel.Good; 
-
-        //----------------- Hidden variables --------------//
-
-        private string ConfigPlace = "Data/config";
-        private string SavesPath = "Data/Save/";
-        private string SavesAdd = ".nng";
-        private string SavesInfoAdd = ".info";
-
-        public Dictionary<string, int> Config { get; private set; }
-        public Dictionary<string, string> GameInfo { get; private set; }
-        public Dictionary<string, string> GameData { get; private set; }
-
-        public string GameName { get; private set; }
-
-        public Scene CurentScene { get; private set; }
-
-        //public List<string> DebugList { get; private set; }
-
         //----------------- Functions block ---------------//
 
         private void Awake()
         {
             _instance = this;
 
-            if (!IsStart) return;
-            IsStart = false;
-
-            OnAwake();
-        }
-
-        private void OnAwake()
-        {
-            DontDestroyOnLoad(this.gameObject);
-
             Config = new Dictionary<string, int>();
 
-            if (UseNewConfig) ResetConfig();
+            if (ResetConfigOnStart) ResetConfig();
             else LoadConfig();
 
             CurentScene = (Scene)Application.loadedLevel;
             Debug.Log("Curent scene is " + CurentScene);
+        }
+
+
+        public void Print()
+        {
+            print("Ok!");
         }
 
         //------------- Event functions --------------//
@@ -129,8 +113,6 @@ namespace game
         {
             Debug.Log("Change Config");
             if (OnChengeConfig != null) OnChengeConfig();
-
-            QualitySettings.SetQualityLevel(Config["QualityLevel"]);
             
         }
 
@@ -144,13 +126,13 @@ namespace game
 
             List<string> names = new List<string>();
 
-            if (!Directory.Exists(SavesPath))
+            if (!Directory.Exists(saveDirectory))
             {
-                Directory.CreateDirectory(SavesPath);
+                Directory.CreateDirectory(saveDirectory);
                 return names;
             }
 
-            string[] fullNames = Directory.GetFiles(@SavesPath, "*" + SavesInfoAdd, SearchOption.TopDirectoryOnly);
+            string[] fullNames = Directory.GetFiles(@saveDirectory, "*" + saveInfoExtension, SearchOption.TopDirectoryOnly);
 
             foreach (string file in fullNames)
             {
@@ -165,13 +147,13 @@ namespace game
 
             Dictionary<string, string> saveInfo = new Dictionary<string, string>();
 
-            if (!Directory.Exists(SavesPath))
+            if (!Directory.Exists(saveDirectory))
             {
-                Directory.CreateDirectory(SavesPath);
+                Directory.CreateDirectory(saveDirectory);
                 return saveInfo;
             }
 
-            string file = SavesPath + fileName + SavesInfoAdd;
+            string file = saveDirectory + fileName + saveInfoExtension;
 
             if (!File.Exists(file)) return saveInfo;
 
@@ -196,41 +178,40 @@ namespace game
 
         public void LoadGame(string name)
         {
-            if (!Directory.Exists(SavesPath))
+            if (!Directory.Exists(saveDirectory))
             {
                 
-                Directory.CreateDirectory(SavesPath);
+                Directory.CreateDirectory(saveDirectory);
                 return;
             }
 
             bool success = false;
-            string SaveDataPath = SavesPath + name + SavesAdd;
-            string SaveInfoPath = SavesPath + name + SavesInfoAdd;
+            string SaveDataFile = saveDirectory + name + saveDataExtension;
+            string SaveInfoFile = saveDirectory + name + saveInfoExtension;
 
-            if (!File.Exists(SaveInfoPath) || !File.Exists(SaveDataPath)) return;
+            if (!File.Exists(SaveInfoFile) || !File.Exists(SaveDataFile)) return;
 
-            FileStream fsData = new FileStream(SaveDataPath, FileMode.Open);
-            FileStream fsInfo = new FileStream(SaveInfoPath, FileMode.Open);
+            FileStream fsData = new FileStream(SaveDataFile, FileMode.Open);
+            FileStream fsInfo = new FileStream(SaveInfoFile, FileMode.Open);
 
-            Debug.Log("Try to load Files: " + SaveDataPath + " and " + SaveInfoPath);
+            Debug.Log("Try to load Files: " + SaveDataFile + " and " + SaveInfoFile);
 
             try
             {
                 BinaryFormatter bf = new BinaryFormatter();
 
-                GameData = (Dictionary<string, string>)bf.Deserialize(fsData);
+                GameData = (GameData)bf.Deserialize(fsData);
                 GameInfo = (Dictionary<string, string>)bf.Deserialize(fsInfo);
-
+                GameName = name;
                 success = true;
             }
             catch (SerializationException e)
             {
                 Debug.LogError("Fail! " + e.Message); ;
 
-                GameData = new Dictionary<string, string>();
+                GameData = null;
                 GameInfo = new Dictionary<string, string>();
                 GameName = "";
-
                 throw;
             }
             finally
@@ -245,28 +226,26 @@ namespace game
             }
         }
 
-        public void Save(string name, Dictionary<string, string> Info, Dictionary<string, string> Data = null)
+        public void Save(string name, Dictionary<string, string> info, GameData data = null)
         {
-            if (Data == null) Data = new Dictionary<string, string>();
+            if (data == null) data = new GameData();
+            bool success = false;
 
-            GameName = name;
-            GameInfo = Info;
-            GameData = Data;
+            string SaveDataFile = saveDirectory + name + saveDataExtension;
+            string SaveInfoFile = saveDirectory + name + saveInfoExtension;
 
-            string SaveData = SavesPath + GameName + SavesAdd;
-            string SaveInfo = SavesPath + GameName + SavesInfoAdd;
+            FileStream FileStreamInfo = new FileStream(SaveInfoFile, FileMode.Create);
+            FileStream FileStreamData = new FileStream(SaveDataFile, FileMode.Create);
 
-            FileStream fsData = new FileStream(SaveData, FileMode.Create);
-            FileStream fsInfo = new FileStream(SaveInfo, FileMode.Create);
+            Debug.Log("Start saving  " + name);
 
-            Debug.Log("Try to save " + SaveData + " and " + SaveInfo);
-
-            BinaryFormatter bfInfo = new BinaryFormatter();
-            BinaryFormatter bfData = new BinaryFormatter();
+            BinaryFormatter BinaryFormatterInfo = new BinaryFormatter();
+            BinaryFormatter BinaryFormatterData = new BinaryFormatter();
             try
             {
-                bfInfo.Serialize(fsData, Data);
-                bfData.Serialize(fsInfo, Info);
+                BinaryFormatterInfo.Serialize(FileStreamInfo, info);
+                BinaryFormatterData.Serialize(FileStreamData, data);
+                success = true;
             }
             catch (SerializationException e)
             {
@@ -275,9 +254,17 @@ namespace game
             }
             finally
             {
-                fsData.Close();
-                fsInfo.Close();
+                FileStreamInfo.Close();
+                FileStreamData.Close();
             }
+            if (success)
+            {
+                GameInfo = info;
+                GameData = data;
+                GameName = name;
+                Debug.Log("Save success!");
+            }
+
         }
 
         //------------- End of Saves functions --------------//
@@ -287,9 +274,9 @@ namespace game
         private void LoadConfig()
         {
             Debug.Log("Start loading config");
-            if (File.Exists(ConfigPlace))
+            if (File.Exists(configFile))
             {
-                StreamReader sr = new StreamReader(ConfigPlace);
+                StreamReader sr = new StreamReader(configFile);
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
@@ -300,7 +287,7 @@ namespace game
                     Config.Add(parms[0], value);
                 }
                 sr.Close();
-                Debug.Log("Config successfly loaded!");
+                Debug.Log("Config successfuly loaded!");
             }
             else
             {
@@ -309,41 +296,33 @@ namespace game
             }
         }
 
-        public void SaveConfig(Dictionary<string, int> NewConfig)
+        public void SaveConfig(Dictionary<string, int> config)
         {
-            if (NewConfig.Count < 1)
+            if (config.Count < 1)
             {
                 Debug.Log("Can`t save config. It is clear!");
                 return;
             }
-            if (File.Exists(ConfigPlace)) File.Delete(ConfigPlace);
 
-            StreamWriter sr = new StreamWriter(ConfigPlace);
-            foreach (KeyValuePair<string, int> kvp in NewConfig)
+            if (File.Exists(configFile)) File.Delete(configFile);
+
+            StreamWriter sr = new StreamWriter(configFile);
+            foreach (KeyValuePair<string, int> kvp in config)
             {
                 sr.WriteLine(kvp.Key + " " + kvp.Value);
             }
             sr.Close();
+            
+            Config = config;
 
-            Config = NewConfig;
-
-            ChengeConfig();
+            if(OnChengeConfig != null) ChengeConfig();
         }
 
         public void ResetConfig()
         {
-            Debug.Log("Reset config");
-
-            Dictionary<string, int> NewConfig = new Dictionary<string, int>();
-
-            int UseFullScreen = (useFullScreen) ? 1 : 0;
-
-            NewConfig.Add("ScreenWidth", Screen.width);
-            NewConfig.Add("ScreenHeight", Screen.height);
-            NewConfig.Add("UseFullScreen", UseFullScreen);
-            NewConfig.Add("QualityLevel", (int)QualityLevel);
-
-            SaveConfig(NewConfig);
+            Debug.Log("Make new config");
+            Config = _config;
+            SaveConfig(Config);
         }
 
         //---------- End of Config functions -----------//
@@ -433,4 +412,9 @@ namespace game
         //----------- End of Debug functions ------------//
     }
 
+    [System.Serializable]
+    public class GameData
+    {
+        public bool IsNewGame = true;
+    }
 }
