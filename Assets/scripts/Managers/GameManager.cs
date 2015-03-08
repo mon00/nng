@@ -46,7 +46,7 @@ namespace game
         private string saveDataExtension = ".nng";
         private string saveInfoExtension = ".info";
 
-        public Dictionary<string, string> GameInfo { get; private set; }
+        public Dictionary<string, int> GameInfo { get; private set; }
         public GameData GameData { get; private set; }
         public string GameName { get; private set; }
 
@@ -201,7 +201,7 @@ namespace game
                 BinaryFormatter bf = new BinaryFormatter();
 
                 GameData = (GameData)bf.Deserialize(fsData);
-                GameInfo = (Dictionary<string, string>)bf.Deserialize(fsInfo);
+                GameInfo = (Dictionary<string, int>)bf.Deserialize(fsInfo);
                 GameName = name;
                 success = true;
             }
@@ -210,7 +210,7 @@ namespace game
                 Debug.LogError("Fail! " + e.Message); ;
 
                 GameData = null;
-                GameInfo = new Dictionary<string, string>();
+                GameInfo = new Dictionary<string, int>();
                 GameName = "";
                 throw;
             }
@@ -226,7 +226,7 @@ namespace game
             }
         }
 
-        public void Save(string name, Dictionary<string, string> info, GameData data = null)
+        public void Save(string name, Dictionary<string, int> info, GameData data = null)
         {
             if (data == null) data = new GameData();
             bool success = false;

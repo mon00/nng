@@ -142,52 +142,6 @@ namespace game
             return TerrainData;
         }
 
-        void PutCellPrefab(Cell cell)
-        {
-            GameObject NewCell = GameObject.Instantiate(cell.prefab, new Vector3(cell.I * 10, 0, cell.J * 10), Quaternion.identity) as GameObject;
-            NewCell.name = (cell.BiomCellName + " " + cell.I + " " + cell.J);
-            TerrainData.Add(NewCell);
-            NewCell.transform.SetParent(TerrainParent.transform);
-        }
-
-        void DeleteCellPrefab(Cell cell)
-        {
-            GameObject go = GameObject.Find(cell.BiomCellName + " " + cell.I + " " + cell.J);
-            TerrainData.Remove(go);
-            DestroyImmediate(go);
-        }
-
-        void Infection(Cell firstCell, Cell secondCell, int i, int j)
-        {
-            bool success = false;
-            if (secondCell == null) success = true;
-            else if (firstCell.BiomCellName == secondCell.BiomCellName) return;
-            else if (StaticCellNames.Contains(secondCell.BiomCellName)) return;
-            else if (secondCell.MinCount == 0 && secondCell.CurrentCount < secondCell.MinCount) return;
-            else
-            {
-                float firstStrength = firstCell.Strength;
-                float secondStrength = secondCell.Strength;
-                float firstRand = Random.Range(ChanceMin, ChanceMax);
-                float secondRand = Random.Range(ChanceMin, ChanceMax);
-
-                if (firstStrength * firstRand > secondStrength * secondRand)
-                {
-                    success = true;
-                    DeleteCellPrefab(secondCell);
-                }
-            }
-
-            if (success)
-            {
-                Cell NewCell = new Cell(firstCell, i, j);
-                NewCell.CurrentCount = (firstCell.CurrentCount + 1);
-                Data[i, j] = NewCell;
-                PutCellPrefab(NewCell);
-                NewActiveCells.Add(NewCell);
-            }
-        }
-
         bool CheckNearBioms(Cell CurrentCell)
         {
             if (ActiveCells.Count == 0) return true;
@@ -230,12 +184,60 @@ namespace game
             return false;
         }
 
+        void Infection(Cell firstCell, Cell secondCell, int i, int j)
+        {
+            bool success = false;
+            if (secondCell == null) success = true;
+            else if (firstCell.BiomCellName == secondCell.BiomCellName) return;
+            else if (StaticCellNames.Contains(secondCell.BiomCellName)) return;
+            else if (secondCell.MinCount == 0 && secondCell.CurrentCount < secondCell.MinCount) return;
+            else
+            {
+                float firstStrength = firstCell.Strength;
+                float secondStrength = secondCell.Strength;
+                float firstRand = Random.Range(ChanceMin, ChanceMax);
+                float secondRand = Random.Range(ChanceMin, ChanceMax);
+
+                if (firstStrength * firstRand > secondStrength * secondRand)
+                {
+                    success = true;
+                    DeleteCellPrefab(secondCell);
+                }
+            }
+
+            if (success)
+            {
+                Cell NewCell = new Cell(firstCell, i, j);
+                NewCell.CurrentCount = (firstCell.CurrentCount + 1);
+                Data[i, j] = NewCell;
+                PutCellPrefab(NewCell);
+                NewActiveCells.Add(NewCell);
+            }
+        }
+
+        void PutCellPrefab(Cell cell)
+        {
+            GameObject NewCell = GameObject.Instantiate(cell.prefab, new Vector3(cell.I * 10, 0, cell.J * 10), Quaternion.identity) as GameObject;
+            NewCell.name = (cell.BiomCellName + " " + cell.I + " " + cell.J);
+            TerrainData.Add(NewCell);
+            NewCell.transform.SetParent(TerrainParent.transform);
+        }
+
         void PutClearCellPrefab(int i, int j)
         {
-            Cell cell = new Cell(ClearCell, (i - 2), (j -2));
+            Cell cell = new Cell(ClearCell, (i - 2), (j - 2));
             ExtendedData[i, j] = cell;
             PutCellPrefab(cell);
         }
+
+        void DeleteCellPrefab(Cell cell)
+        {
+            GameObject go = GameObject.Find(cell.BiomCellName + " " + cell.I + " " + cell.J);
+            TerrainData.Remove(go);
+            DestroyImmediate(go);
+        }
+
+
     }
 
     [System.Serializable]
