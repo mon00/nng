@@ -42,13 +42,12 @@ namespace game
         //----------------- Hidden variables --------------//
 
         private string configFile = "Data/config";
-        private string saveDirectory = "Data/Save/";
-        private string saveDataExtension = ".nng";
-        private string saveInfoExtension = ".info";
+        private string SaveDirectory = "Data/Save/";
+        private string InfoFile = "Data/info";
 
-        public Dictionary<string, int> GameInfo { get; private set; }
+        public GameInfo GameInfo = new GameInfo();
+        public GameInfoHolder GameInfoHolder = new GameInfoHolder();
         public GameData GameData { get; private set; }
-        public string GameName { get; private set; }
 
         public Dictionary<string, int> Config { get; private set; }
         private Dictionary<string, int> _config = new Dictionary<string, int>
@@ -77,14 +76,10 @@ namespace game
             if (ResetConfigOnStart) ResetConfig();
             else LoadConfig();
 
+            LoadInfoArray();
+
             CurentScene = (Scene)Application.loadedLevel;
             Debug.Log("Curent scene is " + CurentScene);
-        }
-
-
-        public void Print()
-        {
-            print("Ok!");
         }
 
         //------------- Event functions --------------//
@@ -120,104 +115,71 @@ namespace game
 
         //------------- Saves functions --------------//
 
-        public List<string> LoadNames()
+        public void LoadInfoArray()
         {
-            Debug.Log("Try to load save`s files names");
+            Debug.Log("Try to load Info Array");
 
-            List<string> names = new List<string>();
-
-            if (!Directory.Exists(saveDirectory))
+            if (!Directory.Exists(SaveDirectory))
             {
-                Directory.CreateDirectory(saveDirectory);
-                return names;
+                Directory.CreateDirectory(SaveDirectory);
+                return;
             }
 
-            string[] fullNames = Directory.GetFiles(@saveDirectory, "*" + saveInfoExtension, SearchOption.TopDirectoryOnly);
-
-            foreach (string file in fullNames)
+            if (!File.Exists(InfoFile))
             {
-                names.Add(Path.GetFileNameWithoutExtension(file));
-            }
-            return names;
-        }
-
-        public Dictionary<string, string> LoadInfo(string fileName)
-        {
-            Debug.Log("Try to load Info of " + fileName);
-
-            Dictionary<string, string> saveInfo = new Dictionary<string, string>();
-
-            if (!Directory.Exists(saveDirectory))
-            {
-                Directory.CreateDirectory(saveDirectory);
-                return saveInfo;
+                return;
             }
 
-            string file = saveDirectory + fileName + saveInfoExtension;
-
-            if (!File.Exists(file)) return saveInfo;
-
-            FileStream infoStream = new FileStream(file, FileMode.Open);
+            FileStream infoStream = new FileStream(InfoFile, FileMode.Open);
 
             try
             {
                 BinaryFormatter infoFormatter = new BinaryFormatter();
-                saveInfo = (Dictionary<string, string>)infoFormatter.Deserialize(infoStream);
+                GameInfoHolder = (GameInfoHolder)infoFormatter.Deserialize(infoStream);
             }
             catch (SerializationException e)
             {
-                Debug.LogError("Cant read info of " + fileName + ". Error: " + e.Message);
+                Debug.LogError("Cant read info. Error: " + e.Message);
             }
             finally
             {
                 infoStream.Close();
             }
-
-            return saveInfo;
         }
 
-        public void LoadGame(string name)
+        public void LoadGame(GameInfo gameInfo)
         {
-            if (!Directory.Exists(saveDirectory))
+            if (!Directory.Exists(SaveDirectory))
             {
-                
-                Directory.CreateDirectory(saveDirectory);
+                Directory.CreateDirectory(SaveDirectory);
                 return;
             }
 
             bool success = false;
-            string SaveDataFile = saveDirectory + name + saveDataExtension;
-            string SaveInfoFile = saveDirectory + name + saveInfoExtension;
+            string SaveDataFile = SaveDirectory + gameInfo.Name;
 
-            if (!File.Exists(SaveInfoFile) || !File.Exists(SaveDataFile)) return;
+            if (!File.Exists(SaveDataFile)) return;
 
             FileStream fsData = new FileStream(SaveDataFile, FileMode.Open);
-            FileStream fsInfo = new FileStream(SaveInfoFile, FileMode.Open);
 
-            Debug.Log("Try to load Files: " + SaveDataFile + " and " + SaveInfoFile);
+            Debug.Log("Try to load save  " + SaveDataFile);
 
             try
             {
                 BinaryFormatter bf = new BinaryFormatter();
 
                 GameData = (GameData)bf.Deserialize(fsData);
-                GameInfo = (Dictionary<string, int>)bf.Deserialize(fsInfo);
-                GameName = name;
                 success = true;
             }
             catch (SerializationException e)
             {
                 Debug.LogError("Fail! " + e.Message); ;
-
                 GameData = null;
-                GameInfo = new Dictionary<string, int>();
-                GameName = "";
                 throw;
             }
             finally
             {
                 fsData.Close();
-                fsInfo.Close();
             }
             if (success)
             {
@@ -226,21 +188,35 @@ namespace game
             }
         }
 
-        public void Save(string name, Dictionary<string, int> info, GameData data = null)
+        public void Save(GameInfo info, GameData data)
         {
-            if (data == null) data = new GameData();
             bool success = false;
 
-            string SaveDataFile = saveDirectory + name + saveDataExtension;
-            string SaveInfoFile = saveDirectory + name + saveInfoExtension;
+            switch (info.Position)
+            {
+                case 1:
+                    GameInfoHolder.One = info;
+                    break;
+                case 2:
+                    GameInfoHolder.Two = info;
+                    break;
+                case 3:
+                    GameInfoHolder.Three = info;
+                    break;
+                default:
+                    return;
+            }
 
-            FileStream FileStreamInfo = new FileStream(SaveInfoFile, FileMode.Create);
+            string SaveDataFile = SaveDirectory + info.Name;
+
+            FileStream FileStreamInfo = new FileStream(InfoFile, FileMode.Create);
             FileStream FileStreamData = new FileStream(SaveDataFile, FileMode.Create);
 
             Debug.Log("Start saving  " + name);
 
             BinaryFormatter BinaryFormatterInfo = new BinaryFormatter();
             BinaryFormatter BinaryFormatterData = new BinaryFormatter();
+
             try
             {
                 BinaryFormatterInfo.Serialize(FileStreamInfo, info);
@@ -249,7 +225,7 @@ namespace game
             }
             catch (SerializationException e)
             {
-                Debug.Log("Cant save file " + name + ". Error: " + e.Message);
+                Debug.Log("Cant save file " + info.Name + ". Error: " + e.Message);
                 throw;
             }
             finally
@@ -261,7 +237,6 @@ namespace game
             {
                 GameInfo = info;
                 GameData = data;
-                GameName = name;
                 Debug.Log("Save success!");
             }
 
@@ -416,5 +391,38 @@ namespace game
     public class GameData
     {
         public bool IsNewGame = true;
+    }
+
+    [System.Serializable]
+    public class GameInfoHolder
+    {
+        public GameInfo One = new GameInfo();
+        public GameInfo Two = new GameInfo();
+        public GameInfo Three = new GameInfo();
+    }
+
+    [System.Serializable]
+    public class GameInfo
+    {
+        public bool NewGame = true;
+        public string Name = "";
+        public int Position;
+
+        public int WorldSize;
+        public int WorldDispersion;
+
+        public int StartBiomSize;
+
+        public int SecondBiomSize;
+        public int SecondBiomCount;
+
+        public int ThirdBiomSize;
+        public int ThirdBiomCount;
+
+        public int FourthBiomSize;
+        public int FourthBiomCount;
+
+        public int FifthBiomSize;
+        public int FifthBiomCount;
     }
 }
