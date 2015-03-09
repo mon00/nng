@@ -21,7 +21,8 @@ public class MenuChenger : MonoBehaviour {
     {
         if (MainCamera.transform.position == NewAnchor.transform.position) return;
         CurrentAnchor = NewAnchor;
-        ChengePosition = ChengeRotation = Move = true;
+        ChengePosition = ChengeRotation = true;
+        if (!Move) Move = true;
     }
 
     public void ChengeWindow(GameObject NewWindow)
@@ -29,6 +30,7 @@ public class MenuChenger : MonoBehaviour {
         if (CurrentWindow == NewWindow) return;
         if (CurrentWindow != null)  CurrentWindow.SetActive(false);
         CurrentWindow = NewWindow;
+        if (!Move) Move = true;
     }
 
     void Update()

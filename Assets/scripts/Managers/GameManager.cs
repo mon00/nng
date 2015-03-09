@@ -45,9 +45,10 @@ namespace game
         private string SaveDirectory = "Data/Save/";
         private string InfoFile = "Data/info";
 
-        public GameInfo GameInfo = new GameInfo();
-        public GameInfoHolder GameInfoHolder = new GameInfoHolder();
-        public GameData GameData { get; private set; }
+        private int GameSavesCount = 3;
+        public GameInfo CurrentGameInfo;
+        public GameInfo[] GameInfoArray { get; private set; }
+        public GameData CurrentGameData { get; private set; }
 
         public Dictionary<string, int> Config { get; private set; }
         private Dictionary<string, int> _config = new Dictionary<string, int>
@@ -57,7 +58,7 @@ namespace game
             {"QualityLevel", 3},
         };
 
-        public Scene CurentScene { get; private set; }
+        public Scene CurrentScene { get; private set; }
 
         //------------------- Evets -------------------------//
 
@@ -71,15 +72,29 @@ namespace game
         {
             _instance = this;
 
+            print(configFile);
+
             Config = new Dictionary<string, int>();
 
             if (ResetConfigOnStart) ResetConfig();
             else LoadConfig();
 
+            GameInfoArray = new GameInfo[GameSavesCount];
+            for (int i = 0; i < GameSavesCount; i++)
+            {
+                GameInfoArray[i] = new GameInfo(i);
+            }
+            CurrentGameData = new GameData();
+
             LoadInfoArray();
 
-            CurentScene = (Scene)Application.loadedLevel;
-            Debug.Log("Curent scene is " + CurentScene);
+            foreach (GameInfo info in GameInfoArray)
+            {
+                print("Info index = " + info.Index);
+            }
+
+            CurrentScene = (Scene)Application.loadedLevel;
+            Debug.Log("Current scene is " + CurrentScene);
         }
 
         //------------- Event functions --------------//
@@ -87,14 +102,14 @@ namespace game
         public void ChengeScene(Scene NewScene)
         {
             Debug.Log("Try to chenge scene to " + NewScene);
-            if (CurentScene == NewScene)
+            if (CurrentScene == NewScene)
             {
-                Debug.LogWarning("New scene is same with Curent Scene!");
+                Debug.LogWarning("New scene is same with Current Scene!");
                 return;
             }
             if (OnChengeScene != null) OnChengeScene();
-            CurentScene = NewScene;
-            Application.LoadLevel((int)CurentScene);
+            CurrentScene = NewScene;
+            Application.LoadLevel((int)CurrentScene);
         }
 
         public void QuitApp()
@@ -135,7 +150,7 @@ namespace game
             try
             {
                 BinaryFormatter infoFormatter = new BinaryFormatter();
-                GameInfoHolder = (GameInfoHolder)infoFormatter.Deserialize(infoStream);
+                GameInfoArray = (GameInfo[])infoFormatter.Deserialize(infoStream);
             }
             catch (SerializationException e)
             {
@@ -147,6 +162,14 @@ namespace game
             }
         }
 
+        private void SaveInfoArray()
+        {
+            FileStream infoStream = new FileStream(InfoFile, FileMode.Open);
+            BinaryFormatter infoFormatter = new BinaryFormatter();
+            GameInfoArray = (GameInfo[])infoFormatter.Deserialize(infoStream);
+            infoStream.Close();
+        }
+
         public void LoadGame(GameInfo gameInfo)
         {
             if (!Directory.Exists(SaveDirectory))
@@ -156,9 +179,14 @@ namespace game
             }
 
             bool success = false;
+
             string SaveDataFile = SaveDirectory + gameInfo.Name;
 
-            if (!File.Exists(SaveDataFile)) return;
+            if (!File.Exists(SaveDataFile))
+            {
+                Debug.LogError("No save " + SaveDataFile);
+                return;
+            }
 
             FileStream fsData = new FileStream(SaveDataFile, FileMode.Open);
 
@@ -168,13 +196,12 @@ namespace game
             {
                 BinaryFormatter bf = new BinaryFormatter();
 
-                GameData = (GameData)bf.Deserialize(fsData);
+                CurrentGameData = (GameData)bf.Deserialize(fsData);
                 success = true;
             }
             catch (SerializationException e)
             {
-                Debug.LogError("Fail! " + e.Message); ;
-                GameData = null;
+                Debug.LogError("Fail! " + e.Message);
                 throw;
             }
             finally
@@ -192,21 +219,7 @@ namespace game
         {
             bool success = false;
 
-            switch (info.Position)
-            {
-                case 1:
-                    GameInfoHolder.One = info;
-                    break;
-                case 2:
-                    GameInfoHolder.Two = info;
-                    break;
-                case 3:
-                    GameInfoHolder.Three = info;
-                    break;
-                default:
-                    return;
-            }
-
+            GameInfoArray[info.Index] = info;
             string SaveDataFile = SaveDirectory + info.Name;
 
             FileStream FileStreamInfo = new FileStream(InfoFile, FileMode.Create);
@@ -235,11 +248,21 @@ namespace game
             }
             if (success)
             {
-                GameInfo = info;
-                GameData = data;
+                CurrentGameInfo = info;
+                CurrentGameData = data;
                 Debug.Log("Save success!");
             }
+        }
 
+        public void DeleteGame (GameInfo info)
+        {
+            if (!Directory.Exists(SaveDirectory)) return;
+            if (!File.Exists(SaveDirectory + info.Name)) return;
+
+            File.Delete(SaveDirectory + info.Name);
+            GameInfoArray[info.Index] = new GameInfo(info.Index);
+            SaveInfoArray();
+            Debug.Log("Game " + info.Name + " deleted!");
         }
 
         //------------- End of Saves functions --------------//
@@ -394,19 +417,13 @@ namespace game
     }
 
     [System.Serializable]
-    public class GameInfoHolder
-    {
-        public GameInfo One = new GameInfo();
-        public GameInfo Two = new GameInfo();
-        public GameInfo Three = new GameInfo();
-    }
-
-    [System.Serializable]
     public class GameInfo
     {
-        public bool NewGame = true;
-        public string Name = "";
-        public int Position;
+        public static int InfoCount = 0;
+
+        public bool NewGame;
+        public string Name;
+        public int Index;
 
         public int WorldSize;
         public int WorldDispersion;
@@ -424,5 +441,12 @@ namespace game
 
         public int FifthBiomSize;
         public int FifthBiomCount;
+
+        public GameInfo(int index)
+        {
+            this.Index = index;
+            this.NewGame = true;
+            this.Name = "";
+        }
     }
 }

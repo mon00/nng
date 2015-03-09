@@ -7,60 +7,63 @@ namespace game
     [SerializeField]
     public class GameNewLoad : MonoBehaviour
     {
-        public Button StartGame1;
-        public Button StartGame2;
-        public Button StartGame3;
+        [Header("Inner Elements")]
+        public Button[] GameButtons;
+        public GameObject Display;
+        public Button LoadButton, DeleteButton;
 
+        [Header("Out Elements")]
         public GameObject camera;
         public GameObject NewGameWindow;
         public GameObject NewGameAnchor;
 
-        private GameInfo[] GameInfoArray = new GameInfo[3];
+        private GameInfo CurrentGameInfo;
+        private bool DelLoadActive = false;
 
         void Start()
         {
-            GameInfoArray[0] = GameManager.Instance.GameInfoHolder.One;
-            GameInfoArray[1] = GameManager.Instance.GameInfoHolder.Two;
-            GameInfoArray[2] = GameManager.Instance.GameInfoHolder.Three;
-
-            if (GameInfoArray[0].NewGame)
+            DeleteButton.enabled = LoadButton.enabled = false;
+            
+            int i = 0;
+            foreach (Button button in GameButtons)
             {
-                StartGame1.GetComponentInChildren<Text>().text = "Start new Game";
-                StartGame1.onClick.AddListener(()=>StartNewGame(0));
-            }
-
-            if (GameInfoArray[1].NewGame)
-            {
-                StartGame1.GetComponentInChildren<Text>().text = "Start new Game";
-                StartGame1.onClick.AddListener(() => StartNewGame(1));
-            }
-
-            if (GameInfoArray[2].NewGame)
-            {
-                StartGame1.GetComponentInChildren<Text>().text = "Start new Game";
-                StartGame1.onClick.AddListener(() => StartNewGame(2));
+                if (GameManager.Instance.GameInfoArray[i] == null)
+                {
+                    button.GetComponentInChildren<Text>().text = "Do not work!";
+                }
+                else
+                {
+                    GameInfo gameInfo = GameManager.Instance.GameInfoArray[i];
+                    if (gameInfo.NewGame)
+                    {
+                        button.GetComponentInChildren<Text>().text = "Start new Game";
+                        button.onClick.AddListener(() => StartNewGame(gameInfo));
+                    }
+                    else
+                    {
+                        button.GetComponentInChildren<Text>().text = gameInfo.Name;
+                        button.onClick.AddListener(() => DisplayGame(gameInfo));
+                    }
+                }
+                i++;
             }
         }
 
-        public void StartNewGame(int pos)
+        public void StartNewGame(GameInfo info)
         {
-            switch (pos)
-            {
-                case 0:
-                    GameManager.Instance.GameInfo = GameManager.Instance.GameInfoHolder.One;
-                    break;
-                case 1:
-                    GameManager.Instance.GameInfo = GameManager.Instance.GameInfoHolder.Two;
-                    break;
-                case 2:
-                    GameManager.Instance.GameInfo = GameManager.Instance.GameInfoHolder.Three;
-                    break;
-                default:
-                    return;
-            }
-
-            camera.GetComponent<MenuChenger>().ChengePlace(NewGameAnchor);
             camera.GetComponent<MenuChenger>().ChengeWindow(NewGameWindow);
+            camera.GetComponent<MenuChenger>().ChengePlace(NewGameAnchor);
+            GameManager.Instance.CurrentGameInfo = info;
+        }
+
+        public void DisplayGame(GameInfo info)
+        {
+            if (DeleteButton.enabled == false || LoadButton.enabled == false)
+            {
+                DeleteButton.enabled = LoadButton.enabled = true;
+                DeleteButton.onClick.AddListener(() => GameManager.Instance.DeleteGame(info));
+                LoadButton.onClick.AddListener(() => GameManager.Instance.LoadGame(info));
+            }
         }
     }
 }
