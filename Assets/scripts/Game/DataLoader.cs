@@ -11,10 +11,32 @@ namespace game
         
         void Awake()
         {
-            TerrainGenerator TG = TerrainGeneratorHolder.GetComponent<TerrainGenerator>();
-            print(TG.TryCount);
-            List<GameObject> TerrainData = TG.Generate();
-            if (TerrainData.Count == 0) Debug.LogError("Can`t create this map!");
+            if (GameManager.Instance.GameInfo.NewGame)
+            {
+                TerrainGenerator TG = TerrainGeneratorHolder.GetComponent<TerrainGenerator>();
+                List<GameObject> TerrainData = TG.Generate();
+                if (TerrainData.Count == 0)
+                {
+                    Debug.LogError("Can`t create this map!");
+                    GameManager.Instance.ChengeScene(Scene.Intro);
+                    return;
+                }
+                GameManager.Instance.GameData.TerrainData = TerrainData;
+                foreach (GameObject go in TerrainData)
+                {
+                    print(go.name);
+                }
+                GameManager.Instance.SaveGame(GameManager.Instance.GameInfo, GameManager.Instance.GameData);
+                GameManager.Instance.GameInfo.NewGame = false;
+            }
+            else
+            {
+                List<GameObject> TerrainData = GameManager.Instance.GameData.TerrainData;
+                foreach (GameObject go in TerrainData)
+                {
+                    print("Ну почти загрузило " + go.name);
+                }
+            }
         }
     }
 }
