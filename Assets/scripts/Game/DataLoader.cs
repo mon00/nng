@@ -1,16 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Lab70_GameManager;
 
-namespace game
+namespace Common
 {
     [SerializeField]
     public class DataLoader : MonoBehaviour
     {
         public GameObject TerrainGeneratorHolder;
-        
+
         void Awake()
         {
+            /*
             if (GameManager.Instance.GameInfo.NewGame)
             {
                 TerrainGenerator TG = TerrainGeneratorHolder.GetComponent<TerrainGenerator>();
@@ -37,6 +39,7 @@ namespace game
                     print("Ну почти загрузило " + go.name);
                 }
             }
+             */
         }
     }
 }

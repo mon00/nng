@@ -1,19 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using Lab70_GameManager;
 
-
-namespace game
+namespace Common
 {
+    [SerializeField]
     public class NewGame : MonoBehaviour
     {
+        public GameObject GamePanel;
 
-        private GameInfo info;
+        private Info info;
 
         void Start()
         {
-            info = GameManager.Instance.TmpGameInfo;
-
+            info = GamePanel.GetComponent<GamePanel>().CurrentGameInfo;
         }
 
         public void UpdateName(InputField NameField)
@@ -24,8 +25,8 @@ namespace game
         public void StartGame()
         {
             if (info.Name == "") return;
-            GameManager.Instance.SaveGame(info, new GameData());
-            GameManager.Instance.LoadGame(info);
+            //GameManager.Instance.SaveGame(info, new GameData());
+            //GameManager.Instance.LoadGame(info);
         }
     }
 }
