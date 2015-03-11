@@ -14,7 +14,7 @@ namespace Common
 
         void Start()
         {
-            info = GamePanel.GetComponent<GamePanel>().CurrentGameInfo;
+            //info = GamePanel.GetComponent<GamePanel>().CurrentGameInfo;
         }
 
         public void UpdateName(InputField NameField)
@@ -25,8 +25,8 @@ namespace Common
         public void StartGame()
         {
             if (info.Name == "") return;
-            //GameManager.Instance.SaveGame(info, new GameData());
-            //GameManager.Instance.LoadGame(info);
+            GameManager.Instance.Save(info, new Data());
+            GameManager.Instance.Load(info);
         }
     }
 }

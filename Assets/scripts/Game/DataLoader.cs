@@ -12,6 +12,17 @@ namespace Common
 
         void Awake()
         {
+            Info info = GameManager.Instance.GameInfo;
+
+            if (info.NewGame)
+            {
+                TerrainGenerator TG = TerrainGeneratorHolder.GetComponent<TerrainGenerator>();
+                List<GameObject> TerrainData = TG.Generate();
+            }
+            else
+            {
+
+            }
             /*
             if (GameManager.Instance.GameInfo.NewGame)
             {

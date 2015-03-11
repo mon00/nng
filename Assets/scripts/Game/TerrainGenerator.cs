@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace game
+namespace Common
 {
     [SerializeField]
     public class TerrainGenerator : MonoBehaviour

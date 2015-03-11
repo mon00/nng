@@ -15,7 +15,7 @@ namespace Common
         public Button DeleteButton, LoadButton;
         
         [Header("Panels")]
-        public GameObject MainMenu;
+        public GameObject NewGameAnchor;
         public GameObject NewGamePanel;
 
         private bool firstStart = true;
@@ -34,6 +34,7 @@ namespace Common
                 {
                     button.GetComponentInChildren<Text>().text = "Start new game";
                     button.onClick.AddListener(() => StartNewGame(info));
+                    print(button);
                 }
                 else
                 {
@@ -46,7 +47,8 @@ namespace Common
         public void StartNewGame(Info info)
         {
             CurrentGameInfo = info;
-            MainMenu.GetComponent<PanelSwitcher>().ChangePanel(NewGamePanel);
+            GameObject.FindGameObjectWithTag("MainCamera").GetComponent<PanelSwitcher>().SwitchAnchor(NewGameAnchor);
+            GameObject.FindGameObjectWithTag("MainCamera").GetComponent<PanelSwitcher>().SwitchPanel(NewGamePanel);
         }
 
         public void DisplayGame(Info info)
