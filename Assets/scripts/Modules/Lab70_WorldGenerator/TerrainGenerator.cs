@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Common
+namespace Lab70_WorldGenerator
 {
     [SerializeField]
     public class TerrainGenerator : MonoBehaviour
@@ -121,21 +121,21 @@ namespace Common
                     if (ExtendedData[i, j] == null || ExtendedData[i, j].BiomCellName == ClearCell.BiomCellName) continue;
 
                     if (ExtendedData[(i - 1), j] == null) PutClearCellPrefab((i - 1), j);
-                    if (ExtendedData[(i - 2), j] == null) PutClearCellPrefab((i - 2), j);
+                    //if (ExtendedData[(i - 2), j] == null) PutClearCellPrefab((i - 2), j);
 
                     if (ExtendedData[(i + 1), j] == null) PutClearCellPrefab((i + 1), j);
-                    if (ExtendedData[(i + 2), j] == null) PutClearCellPrefab((i + 2), j);
+                    //if (ExtendedData[(i + 2), j] == null) PutClearCellPrefab((i + 2), j);
 
-                    if (ExtendedData[i, (j - 1)] == null) PutClearCellPrefab(i, (j - 1));
+                    //if (ExtendedData[i, (j - 1)] == null) PutClearCellPrefab(i, (j - 1));
                     if (ExtendedData[i, (j - 2)] == null) PutClearCellPrefab(i, (j - 2));
 
                     if (ExtendedData[i, (j + 1)] == null) PutClearCellPrefab(i, (j + 1));
-                    if (ExtendedData[i, (j + 2)] == null) PutClearCellPrefab(i, (j + 2));
+                    //if (ExtendedData[i, (j + 2)] == null) PutClearCellPrefab(i, (j + 2));
 
-                    if (ExtendedData[(i - 1), (j - 1)] == null) PutClearCellPrefab((i - 1), (j - 1));
-                    if (ExtendedData[(i - 1), (j + 1)] == null) PutClearCellPrefab((i - 1), (j + 1));
-                    if (ExtendedData[(i + 1), (j - 1)] == null) PutClearCellPrefab((i + 1), (j - 1));
-                    if (ExtendedData[(i + 1), (j + 1)] == null) PutClearCellPrefab((i + 1), (j + 1));
+                    //if (ExtendedData[(i - 1), (j - 1)] == null) PutClearCellPrefab((i - 1), (j - 1));
+                    //if (ExtendedData[(i - 1), (j + 1)] == null) PutClearCellPrefab((i - 1), (j + 1));
+                    //if (ExtendedData[(i + 1), (j - 1)] == null) PutClearCellPrefab((i + 1), (j - 1));
+                    //if (ExtendedData[(i + 1), (j + 1)] == null) PutClearCellPrefab((i + 1), (j + 1));
                 }
             }
 
@@ -156,7 +156,7 @@ namespace Common
                 float Factor = (cell.MaxCount != 0 && cell.MaxCount < StepsNumber) ? (float)cell.MaxCount / StepsNumber : 1;
                 float Factor2 = (CurrentCell.MaxCount != 0 && CurrentCell.MaxCount < StepsNumber) ? (float)CurrentCell.MaxCount / StepsNumber : 1;
 
-                if (Range < StepsNumber * 1.55 * (Factor + Factor2) / 2 && Range > StepsNumber * Dispersion * (Factor + Factor2) / 2) NearThis++;
+                if (Range < (StepsNumber * 1.55 * (Factor + Factor2) / 2) && Range > (StepsNumber * Dispersion * (Factor + Factor2) / 2) ) NearThis++;
                 else if (Range < StepsNumber * Dispersion * (Factor + Factor2) / 2) return false;
             }
             if (CurrentCell.MaxCellNear != 0 && NearThis > CurrentCell.MaxCellNear || NearThis < 1) return false;
@@ -245,10 +245,10 @@ namespace Common
     {
         public string BiomCellName;
         [Range(0f, 1f)]
-        public float Strength;
+        public float Strength = 0.5f;
         public int MaxCount = 0;
-        public int MinCount = 0;
-        public int MaxCellNear;
+        public int MinCount = 2;
+        public int MaxCellNear = 0;
         public GameObject prefab;
 
         [HideInInspector]
@@ -257,6 +257,16 @@ namespace Common
         public int J;
         [HideInInspector]
         public int CurrentCount = 1;
+
+        public Cell(string name, GameObject pref, int maxCount, int minCount, int maxCellNear, float strength)
+        {
+            this.BiomCellName = name;
+            this.prefab = pref;
+            this.MaxCount = maxCount;
+            this.MinCount = minCount;
+            this.MaxCellNear = maxCellNear;
+            this.Strength = strength;
+        }
 
         public Cell(string name, GameObject pref, int I, int J)
         {
