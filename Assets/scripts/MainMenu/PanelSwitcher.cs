@@ -27,7 +27,6 @@ public class PanelSwitcher : MonoBehaviour {
             bool active = (panel == CurrentPanel) ? true : false;
             panel.SetActive(active);
         }
-
         transform.position = CurrentAnchor.transform.position;
         transform.rotation = CurrentAnchor.transform.rotation;
     }
