@@ -7,10 +7,10 @@ using System.Collections.Generic;
 
 namespace Lab70_Framework
 {
-    public class GameController : MonoBehaviour
+    public class FrameworkController : MonoBehaviour
     {
-        public static GameController Instance;
-        private GameController _instance
+        public static FrameworkController Instance;
+        private FrameworkController _instance
         {
             get { return Instance; }
             set
@@ -22,7 +22,7 @@ namespace Lab70_Framework
                 }
                 else
                 {
-                    Debug.Log("Try to put one more GameController!");
+                    Debug.Log("Try to put one more FrameworkController!");
                     Destroy(this);
                 }
             }
@@ -30,7 +30,15 @@ namespace Lab70_Framework
 
         public ErrorController Error { get; private set; }
         public CacheController Cache { get; private set; }
-        public ConfigController Config { get; private set; }
+        public ConfigController Config
+        {
+            get { return Config; }
+            set
+            {
+                if (OnConfigChange != null) OnConfigChange();
+                Config = value;
+            }
+        }
         public LocalizationController Localization { get; private set; }
         public ClientController Client { get; private set; }
         public StatisticsController Statistics { get; private set; }
@@ -66,7 +74,7 @@ namespace Lab70_Framework
         private string clientDirectory = "Client/";
         private string statisticsDirectory = "Stat/";
 
-        void Awake()
+        public void StartFramework()
         {
             Instance = this;
 

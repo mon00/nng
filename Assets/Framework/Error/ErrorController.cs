@@ -40,11 +40,11 @@ namespace Lab70_Framework.Error
             ErrorWindow.name = "ErrorWindow";
             ErrorWindow.transform.SetParent(ErrorCanvas.transform);
             ErrorWindow.GetComponentInChildren<Text>().text = "Null";
-            ErrorWindow.GetComponentInChildren<Button>().onClick.AddListener(() => GameController.Instance.Error.CloseErrorWindow());
+            ErrorWindow.GetComponentInChildren<Button>().onClick.AddListener(() => FrameworkController.Instance.Error.CloseErrorWindow());
 
             ErrorCanvas.SetActive(false);
 
-            GameController.Instance.OnAppQuit += new GameController.VoidEvent(SaveErrorLog);
+            FrameworkController.Instance.OnAppQuit += new FrameworkController.VoidEvent(SaveErrorLog);
         }
 
         public void GenerateError(string Subject, string Message)
